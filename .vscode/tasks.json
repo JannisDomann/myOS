@@ -1,0 +1,44 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Cleanup",
+            "type": "shell",
+            "command": "bazel clean --expunge",
+            "problemMatcher": []
+        },
+        {
+            "label": "Build myOS",
+            "type": "shell",
+            "command": "bazel build //:disk_image && chmod 666 $(bazel info bazel-bin)/disk.img",// && chmod +x $(bazel info bazel-bin)/src/kernel/kernel_elf",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Run QEMU",
+            "type": "shell",
+            "command": "qemu-system-i386 -drive format=raw,file=$(bazel info bazel-bin)/disk.img",
+            "dependsOn": "Build myOS",
+            "problemMatcher": []
+        },
+        {
+            "label": "Debug QEMU",
+            "type": "shell",
+            "command": "qemu-system-i386 -drive format=raw,file=$(bazel info bazel-bin)/disk.img -s -S &",
+            "dependsOn": "Build myOS",
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "."
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "."
+                }
+            }
+        }
+    ]
+}

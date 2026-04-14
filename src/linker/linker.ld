@@ -1,5 +1,6 @@
-OUTPUT_FORMAT("binary")
+OUTPUT_FORMAT("elf32-i386")
 ENTRY(RealMode)
+
 SECTIONS
 {
 	.text 0x8000 : {

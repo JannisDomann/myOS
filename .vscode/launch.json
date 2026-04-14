@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Kernel via QEMU",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/src/kernel/kernel_elf",
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb",
+            "miDebuggerServerAddress": "localhost:1234",
+            "targetArchitecture": "x86",
+            "preLaunchTask": "Debug QEMU",
+            "stopAtEntry": true,
+            "setupCommands": [
+                {
+                    "description": "Connect to QEMU GDB stub",
+                    "text": "target remote :1234",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Set architecture",
+                    "text": "set architecture i386",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Hex output",
+                    "text": "set output-radix 16",
+                    "ignoreFailures": true
+                }
+            ],
+            "externalConsole": false
+        }
+    ]
+}
