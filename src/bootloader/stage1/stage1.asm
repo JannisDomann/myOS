@@ -13,7 +13,7 @@ start:
     jmp 0x0000:init             ; CS normalization (far jump)
 
 init:
-    ; init segemnts and stack
+    ; init segments and stack
     xor ax, ax
     mov ds, ax
     mov es, ax
@@ -28,6 +28,8 @@ init:
     call print_string
 
     ; load stage 2 via bios int 13h func 0x02 (read sectors)
+    mov di, 0x03
+.retry:
     mov ah, 0x02                ; call function 2
     mov al, STAGE2_SECTORS
     mov ch, 0x00                ; cylinder 0 
@@ -35,9 +37,18 @@ init:
     mov cl, STAGE2_STARTSECTOR
     mov dl, [BOOT_DRIVE]
     mov bx, STAGE2_STARTOFFSET
+    clc
     int 0x13
-    jc disk_error
+    jnc .success
 
+    xor ax, ax                  ; up to 3x disk reset on error
+    int 0x13
+    dec di
+    jnz .retry
+
+    jmp disk_error
+
+.success:
     ; success and jump (far jump)
     mov si, MSG_LOADED
     call print_string
@@ -59,6 +70,7 @@ print_string:
     ret
 
 disk_error:
+    push ax
     mov si, MSG_ERROR
     call print_string
 
@@ -70,17 +82,24 @@ disk_error:
     mov al, 'x'
     int 0x10
 
-    mov al, ah                  ; load error code from ah in al
+    pop ax
     call print_hex
 
     mov si, MSG_NEWLINE
     call print_string
-    hlt                         ; stop execution on error
+
+    mov si, MSG_REBOOT
+    call print_string
+
+    xor ax, ax                  ; wait for key press
+    int 16h
+    jmp 0xFFFF:0000             ; jump (far jump) to reboot address
+
 
 print_hex:
     push cx
     mov cx, 0x02
-    mov bl, al                  ; store error code in bl
+    mov bl, ah                  ; store error code in bl
 .hex_loop:
     rol bl, 0x04                ; roll nibble
     mov al, bl
@@ -100,8 +119,9 @@ print_hex:
 BOOT_DRIVE  db 0
 MSG_BOOTING db "Booting...", CR, NL, 0x00
 MSG_LOADED  db "Stage 2 ready", CR, NL, 0x00
-MSG_ERROR   db "Disk error: "
+MSG_ERROR   db "Disk error: ", 0x00
 MSG_NEWLINE db  CR, NL, 0x00
+MSG_REBOOT  db "Press key to reboot.", CR, NL, 0x00
 
 ; --- MBR structure ---
 %if ($-$$) > 446
@@ -114,4 +134,3 @@ times 446-($-$$) db 0x00        ; padding to mbr partition table
 times 64 db 0x00
 
 dw 0xAA55                       ; bootloader signature
-

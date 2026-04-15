@@ -1,1 +1,1 @@
-exports_files(["linker.ld"])
+exports_files(["linker.ld", "stage2.ld"])

@@ -1,15 +1,23 @@
-OUTPUT_FORMAT("elf32-i386")
-ENTRY(RealMode)
+OUTPUT_FORMAT("elf64-x86-64")
+ENTRY(kernel_main)
 
 SECTIONS
 {
-	.text 0x8000 : {
+	. = 0x100000;
+
+	.text : {
 		*(.text)
+	}
+	.rodata : {
+		*(.rodata)
 	}
 	.data : {
 		*(.data)
 	}
 	.bss : {
 		*(.bss)
+		*(COMMON)
 	}
+
+	_kernel_end = .;
 }

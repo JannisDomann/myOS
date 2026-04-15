@@ -2,26 +2,31 @@
 ; Global Descriptor Table (GDT)
 ;==============================
 
-NULL_Desc:
-    dd  0x00
-    dd  0x00
+section .data
+align 4
 
-CODE_Desc:
+NULL_Desc:
+    dq  0x00
+
+CODE_Desc:              ; 0x08
     dw  0xffff
-    dw  0x00
+    dw  0x0000
     db  0x00
     db  10011010b
     db  11001111b
     db  0x00
 
-DATA_Desc:
+DATA_Desc:              ; 0x10
     dw  0xffff
-    dw  0x00
+    dw  0x0000
     db  0x00
     db  10010010b
     db  11001111b
     db  0x00
 
+gdt_end:
+
+global gdtr
 gdtr:
-Limit   dw  0x18
-Base    dd  NULL_Desc
+    dw  gdt_end - NULL_Desc - 1
+    dd  NULL_Desc
