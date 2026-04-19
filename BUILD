@@ -2,7 +2,7 @@ genrule(
     name = "disk_image",
     srcs = [
         "//src/bootloader:stage1",
-        # "//src/bootloader:stage2_bin",
+        "//src/bootloader:stage2_bin",
         # "//src/kernel:kernel_bin",
     ],
     outs = ["disk.img"],
@@ -10,10 +10,11 @@ genrule(
         # empty 32MB image
         dd if=/dev/zero of=$@ bs=1M count=32
 
-        # stage 1 in sector 0
+        # stage 1 in sector 1
         dd if=$(location //src/bootloader:stage1) of=$@ conv=notrunc bs=512 count=1
         
-        # stage 2 in sector 1
+        # stage 2 in sector 2
+        dd if=$(location //src/bootloader:stage2_bin) of=$@ conv=notrunc bs=512 seek=1
 
         # creates a partition table in mbr from sector 2048, type 'b' (FAT32), '*' (bootable)
         echo "2048,,b,*" | /usr/sbin/sfdisk $@
@@ -24,5 +25,5 @@ genrule(
 
         """,
 )
-#dd if=$(location //src/bootloader:stage2_bin) of=$@ seek=1 conv=notrunc bs=512 seek=1
+
 #MTOOLS_SKIP_CHECK=1 mcopy -i $@@@2048 $(location //src/kernel:kernel_bin) ::kernel.sys

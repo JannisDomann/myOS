@@ -1,4 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_import")
 load("//tools/nasm:nasm.bzl", "nasm_binary")
 load("//tools/nasm:nasm.bzl", "nasm_object")
 
@@ -10,30 +11,49 @@ nasm_binary(
 )
 
 nasm_object(
-    name = "stage2_startup",
+    name = "stage2_startup_obj",
     src = "stage2/stage2.asm",
+    srcs = [
+        "stage2/a20_check.inc",
+        "stage2/a20_kbc.inc",
+        "stage2/gdt.inc",
+    ],
     out = "stage2_startup.o",
 )
 
+cc_import(
+    name = "stage2_startup",
+    objects = [
+        ":stage2_startup_obj",
+    ],
+)
 cc_binary(
     name = "stage2_elf",
     srcs = [
-        "stage2.c",
+        "stage2/stage2.c",
+    ],
+    deps = [
         ":stage2_startup",
     ],
+    features = [
+        "-default_link_libs",
+    ],
+    linkstatic = True,
     copts = [
         "-m32",
         "-ffreestanding",
         "-fno-pie",
         "-fno-stack-protector",
-        "-nostdlib",
+        "-O0",
     ],
     linkopts = [
-        "-melf_i386",
+        "-m32",
+        "-T", "$(location //src/linker:stage2.ld)",
         "-nostdlib",
-        "-T", "//src/linker:stage2.ld",
+        "-static",
+        "-no-pie",
+        "-Wl,--build-id=none",
     ],
-    linkstatic = True,
     additional_linker_inputs = ["//src/linker:stage2.ld"],
     visibility = ["//visibility:public"],
 )

@@ -15,4 +15,10 @@ SECTIONS
 	.bss : {
 		*(.bss)
 	}
+
+	/DISCARD/ : {
+		*(.note*)
+		*(.comment)
+		*(.eh_frame)
+    }
 }

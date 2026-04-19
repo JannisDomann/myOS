@@ -19,14 +19,14 @@
         {
             "label": "Run QEMU",
             "type": "shell",
-            "command": "qemu-system-i386 -drive format=raw,file=$(bazel info bazel-bin)/disk.img",
+            "command": "qemu-system-x86_64 -drive format=raw,file=$(bazel info bazel-bin)/disk.img",
             "dependsOn": "Build myOS",
             "problemMatcher": []
         },
         {
             "label": "Debug QEMU",
             "type": "shell",
-            "command": "qemu-system-i386 -drive format=raw,file=$(bazel info bazel-bin)/disk.img -s -S &",
+            "command": "qemu-system-x86_64 -drive format=raw,file=$(bazel info bazel-bin)/disk.img -s -S &",
             "dependsOn": "Build myOS",
             "isBackground": true,
             "problemMatcher": {

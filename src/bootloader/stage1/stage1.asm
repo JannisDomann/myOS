@@ -4,7 +4,7 @@
 ; --- constants ---
 STAGE2_STARTOFFSET  equ 0x7E00  ; stage 2 start offset
 STAGE2_STARTSECTOR  equ 0x02    ; sector 2 on drive
-STAGE2_SECTORS      equ 0x02    ; sector 2 sectors to be loaded
+STAGE2_SECTORS      equ 0x10    ; sector 16 sectors to be loaded
 CR                  equ 0x0D    ; Carriage Return
 NL                  equ 0x0A    ; New Line
 
@@ -52,8 +52,7 @@ init:
     ; success and jump (far jump)
     mov si, MSG_LOADED
     call print_string
-
-    ; jump to stage 2
+    
     jmp 0x0000:STAGE2_STARTOFFSET
 
 
@@ -120,8 +119,8 @@ BOOT_DRIVE  db 0
 MSG_BOOTING db "Booting...", CR, NL, 0x00
 MSG_LOADED  db "Stage 2 ready", CR, NL, 0x00
 MSG_ERROR   db "Disk error: ", 0x00
+MSG_REBOOT  db "Press key to reboot..", CR, NL, 0x00
 MSG_NEWLINE db  CR, NL, 0x00
-MSG_REBOOT  db "Press key to reboot.", CR, NL, 0x00
 
 ; --- MBR structure ---
 %if ($-$$) > 446
