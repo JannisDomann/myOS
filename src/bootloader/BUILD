@@ -1,4 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_cc//cc:defs.bzl", "cc_import")
 load("//tools/nasm:nasm.bzl", "nasm_binary")
 load("//tools/nasm:nasm.bzl", "nasm_object")
@@ -21,12 +22,36 @@ nasm_object(
     out = "stage2_startup.o",
 )
 
+nasm_object(
+    name = "longmode_obj",
+    src = "stage2/longmode.asm",
+    out = "longmode.o",
+)
+
+nasm_object(
+    name = "util_obj",
+    src = "stage2/util.asm",
+    out = "util.o",
+)
+
 cc_import(
     name = "stage2_startup",
     objects = [
         ":stage2_startup_obj",
+        ":longmode_obj",
+        ":util_obj",
     ],
 )
+
+cc_library(
+    name = "stage2_hdrs",
+    hdrs = [
+        "stage2/stage2.h",
+        "stage2/MBR.h",
+        "stage2/FAT32.h",
+    ],
+)
+
 cc_binary(
     name = "stage2_elf",
     srcs = [
@@ -34,6 +59,7 @@ cc_binary(
     ],
     deps = [
         ":stage2_startup",
+        ":stage2_hdrs",
     ],
     features = [
         "-default_link_libs",
