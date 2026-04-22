@@ -6,6 +6,12 @@ section .entry
 CR  equ 0x0D    ; Carriage
 NL  equ 0x0A    ; New Line
 
+; --- System Control Ports ---
+SCA_PORT            equ 0x92
+
+; --- System Control Register Bits ---
+CR0_PE              equ 0x01
+SCA_A20             equ 0x02
 
 global stage2_start
 stage2_start:
@@ -39,9 +45,9 @@ init:
 
     ; -- fast A20 activation --
     ; setting bit 1 in port 0x92
-    in al, 0x92
-    or al, 00000010b
-    out 0x92, al
+    in al, SCA_PORT
+    or al, SCA_A20
+    out SCA_PORT, al
     call check_a20
     test ax, ax
     jnz .a20_success
@@ -87,7 +93,7 @@ init:
 
     ; --- activate Protected Mode ---
     mov eax, cr0
-    or eax, 00000001b
+    or eax, CR0_PE
     mov cr0, eax
 
     ; far jump: load CODE_Desc (0x08) in CS

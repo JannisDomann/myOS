@@ -46,7 +46,7 @@ check_a20:
 
     je .is_disabled
 
-    mov ax, 1
+    mov ax, 0x01
     jmp .done
 
 .is_disabled:

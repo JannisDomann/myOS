@@ -2,13 +2,20 @@
 
 ; Activates A20 gate via KBC (keyboard controller)
 
-; --- constants ---
+; --- KBC Ports ---
 KBC_DATA_PORT       equ 0x60
 KBC_COMMAND_PORT    equ 0x64
+
+; --- KBC Commands ---
 KBC_CMD_DEACTIVATE  equ 0xAD
 KBC_CMD_ACTIVATE    equ 0xAE
 KBC_CMD_READ        equ 0xD0
 KBC_CMD_WRITE       equ 0xD1
+
+; --- KBC Register Bits ---
+KBC_STATUS_OBF      equ 0x01
+KBC_STATUS_IBF      equ 0x02
+KBC_DATA_OUT_A20    equ 0x02
 
 kbc_a20_activate:
     cli 
@@ -23,6 +30,8 @@ kbc_a20_activate:
     mov al, KBC_CMD_READ
     out KBC_COMMAND_PORT, al
 
+    call kbc_wait_output
+
     ; safe status
     call kbc_wait
     in al, KBC_DATA_PORT
@@ -35,7 +44,7 @@ kbc_a20_activate:
     ; set bit 1 (gate A20) in status 
     call kbc_wait
     pop ax
-    or al, 00000010b
+    or al, KBC_DATA_OUT_A20
     out KBC_DATA_PORT, al
 
     ; 0xAE - re-activate kbc
@@ -50,5 +59,11 @@ kbc_a20_activate:
 ; --- utility functions ---
 kbc_wait:
     in al, KBC_COMMAND_PORT
-    test al, 00000010b
+    test al, KBC_STATUS_IBF
     jnz kbc_wait
+
+kbc_wait_output:
+    in al, KBC_COMMAND_PORT
+    test al, KBC_STATUS_OBF
+    jz kbc_wait_output          ; wait until data ready
+    ret
