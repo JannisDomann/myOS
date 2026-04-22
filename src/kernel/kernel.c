@@ -1,3 +1,5 @@
+#include "kernel.h"
+
 void kClearScreen() {
 	char* videoBufferStart = (char*)0xb8000;
 	char* videoBuffer = videoBufferStart;
@@ -30,23 +32,21 @@ void kPrintf(char* txt, char row, char attrib) {
 	}
 }
 
-void outb(unsigned int port, char value) {
-	__asm__ volatile ("outb %%al,%%dx" :: "d" (port), "a" (value));
-}
-
 void kUpdateCursor(char row, char col) {
 	unsigned short pos = row*0x50+col;
 
-	outb(0x3d4, 0x0e);
-	outb(0x3d5, (char)((pos>>0x08)&0xff));
-	outb(0x3d4, 0x0f);
-	outb(0x3d5, (char)(pos&0xff));
+	outb_asm(0x3d4, 0x0e);
+	outb_asm(0x3d5, (char)((pos>>0x08)&0xff));
+	outb_asm(0x3d4, 0x0f);
+	outb_asm(0x3d5, (char)(pos&0xff));
 }
 
-int main() {
+void kernel_main() {
 	kClearScreen();
 	kPrintf("Hello World!\nHow are you?", 0x00, 0x02);
 	kUpdateCursor(0x02, 0x00);
 
-    return 0;
+    while (1) {
+        __asm("hlt");
+    }
 }

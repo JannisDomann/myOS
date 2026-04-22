@@ -1,31 +1,69 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_import")
 load("//tools/nasm:nasm.bzl", "nasm_object")
+load("//tools/nasm:nasm.bzl", "nasm_object_64")
 
-nasm_object(
-    name = "startup",
+nasm_object_64(
+    name = "kernel_startup_obj",
     src = "kernel.asm",
-    out = "startup.o",
+    out = "kernel.o",
+)
+
+nasm_object_64(
+    name = "util_obj",
+    src = "util64.asm",
+    out = "util64.o",
+)
+
+cc_import(
+    name = "kernel_startup",
+    objects = [
+        ":kernel_startup_obj",
+        ":util_obj",
+    ],
+)
+
+cc_library(
+    name = "kernel_hdrs",
+    hdrs = [
+        "kernel.h",
+    ],
 )
 
 cc_binary(
     name = "kernel_elf",
     srcs = [
         "kernel.c",
-        ":startup",
     ],
-    copts = [
-        "-m32",
-        "-ffreestanding",
-        "-fno-pie",
-        "-fno-stack-protector",
-        "-nostdlib",
+    deps = [
+        ":kernel_startup",
+        ":kernel_hdrs",
     ],
-    linkopts = [
-        "-m32",
-        "-nostdlib",
-        "-T", "//src/linker:linker_ld",
+    features = [
+        "-default_link_libs",
     ],
     linkstatic = True,
+    copts = [
+        "-m64",
+        "-ffreestanding",
+        "-fno-pic",
+        "-fno-pie",
+        "-fno-stack-protector",
+        "-mno-sse",
+        "-mno-mmx",
+        "-mno-red-zone", 
+        "-O0",
+    ],
+    linkopts = [
+        "-m64",
+        "-T", "$(location //src/linker:linker.ld)",
+        "-nostdlib",
+        "-static",
+        "-no-pie",
+        "-Wl,--build-id=none",
+    ],
+    additional_linker_inputs = ["//src/linker:linker.ld"],
     visibility = ["//visibility:public"],
 )
 
