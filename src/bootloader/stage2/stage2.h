@@ -25,6 +25,7 @@ typedef uint8_t bool;
 extern "C" {
 #endif
 
+void memset(const void* dest, uint8_t value, uint32_t size);
 uint32_t memcmp(const void* s1, const void* s2, uint32_t n);
 void setup_paging();
 void read_sectors_ata(uint32_t lba, uint8_t count, uint32_t dest_addr);

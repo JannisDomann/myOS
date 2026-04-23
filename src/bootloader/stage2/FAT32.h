@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 
-// stage2.h ergänzen:
 
 typedef struct {
     uint8_t  jmp[3];

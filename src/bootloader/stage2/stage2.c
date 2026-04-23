@@ -14,6 +14,13 @@ page_table_p pml4 = (page_table_p)0x1000;
 page_table_p pdpt = (page_table_p)0x2000;
 page_table_p pd   = (page_table_p)0x3000;
 
+void memset(const void* dest, uint8_t value, uint32_t size) {
+    uint8_t *p = dest;
+    for (uint32_t i=0; i<size; ++i) {
+        p[i] = value;
+    }
+}
+
 uint32_t memcmp(const void* s1, const void* s2, uint32_t n) {
     const uint8_t *p1 = s1, *p2 = s2;
     for (uint32_t i = 0; i < n; i++) {
@@ -23,12 +30,9 @@ uint32_t memcmp(const void* s1, const void* s2, uint32_t n) {
 }
 
 void setup_paging() {
-    // cleanup tables
-    for (uint16_t i=0; i<512; ++i) {
-        pml4[i] = 0;
-        pdpt[i] = 0;
-        pd[i]   = 0;
-    }
+    memset(pml4, 0, 4096);
+    memset(pdpt, 0, 4096);
+    memset(pd, 0, 4096);
 
     // map first pml4 entry to pdpt
     pml4[0] = (uint32_t)pdpt | PAGE_PRESENT | PAGE_WRITE;
@@ -81,17 +85,18 @@ uint32_t find_partition_start() {
     return 0;
 }
 
-uint32_t find_kernel_cluster(uint32_t partition_lba) {
+uint32_t find_kernel_cluster(uint32_t partition_lba) {  // 2048secs
     uint8_t bpb_buffer[512];
     read_sectors_ata(partition_lba, 1, (uint32_t)bpb_buffer);
     fat32_bpb_t* bpb = (fat32_bpb_t*)bpb_buffer;
 
     // Where does data segment start
-    uint32_t fat_start = partition_lba + bpb->reserved_sectors;
-    uint32_t data_start = fat_start + (bpb->fat_count * bpb->fat_size_32);
+    uint32_t fat_start = partition_lba + bpb->reserved_sectors; // 2048+32=2080secs
+    uint32_t data_start = fat_start + (bpb->fat_count * bpb->fat_size_32); // 2080+2*923=3926
 
     // Read root cluster
     uint32_t root_lba = data_start + (bpb->root_cluster - 2) * bpb->sectors_per_cluster;
+    // 3926+(2-2)*1=3926 (0x1EAC00)
 
     uint8_t dir_buffer[512];
     read_sectors_ata(root_lba, 1, (uint32_t)dir_buffer);
@@ -101,7 +106,7 @@ uint32_t find_kernel_cluster(uint32_t partition_lba) {
     for (uint8_t i=0; i<16; ++i) {
         // compare to "KERNEL   SYS"
         if (memcmp(dir[i].name, "KERNEL  SYS", 11) == 0) {
-            // merge cluster number high and low
+            // merge cluster number high and low (0x0003)
             return (uint32_t)((uint32_t)dir[i].cluster_low | (uint32_t)dir[i].cluster_high << 16);
         }
     }
@@ -123,6 +128,7 @@ void load_kernel_file(uint32_t partition_lba, uint32_t start_cluster, uint32_t d
 
 void stage2_main() {
     uint32_t kernel_ram_entry = 0x200000;
+    uint32_t* KERNEL_MAGIC = (uint32_t*)kernel_ram_entry;
 
     setup_paging();
 
@@ -131,8 +137,12 @@ void stage2_main() {
         uint32_t kernel_cluster = find_kernel_cluster(partition_start);
         if (kernel_cluster) {
             load_kernel_file(partition_start, kernel_cluster, kernel_ram_entry);
-
-            load_paging_and_jump((uint32_t)pml4, EFER_MSR, kernel_ram_entry);
+            if (*KERNEL_MAGIC != 0xBEBAFECA) {
+                while(1) {
+                    __asm("hlt");
+                }
+            }
+            load_paging_and_jump((uint32_t)pml4, EFER_MSR, kernel_ram_entry+0x04);
         }
     }
 }

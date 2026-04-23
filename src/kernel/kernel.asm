@@ -4,7 +4,10 @@ section .entry
 global _start
 extern kernel_main
 
+KERNEL_MAGIC    equ 0xBEBAFECA
+
 _start:
+    dd KERNEL_MAGIC 
     mov rsp, stack_top
     mov rbp, rsp
 
