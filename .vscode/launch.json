@@ -2,33 +2,47 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Kernel via QEMU",
+   
+            "name": "Debug Kernel",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bazel-bin/src/kernel/kernel_elf",
+            "program": "${workspaceFolder}/bazel-bin/src/kernel/kernel.elf",
             "cwd": "${workspaceFolder}",
             "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
             "miDebuggerServerAddress": "localhost:1234",
-            "targetArchitecture": "x86",
             "preLaunchTask": "Debug QEMU",
-            "stopAtEntry": true,
+            "sourceFileMap": {
+                "src": "${workspaceFolder}/src",
+                ".": "${workspaceFolder}"
+            },
             "setupCommands": [
                 {
-                    "description": "Connect to QEMU GDB stub",
-                    "text": "target remote :1234",
-                    "ignoreFailures": false
-                },
-                {
                     "description": "Set architecture",
-                    "text": "set architecture i386",
+                    "text": "set architecture i386:x86-64",
                     "ignoreFailures": false
                 },
+                { 
+                    "text": "add-symbol-file ${workspaceFolder}/bazel-bin/src/bootloader/stage1.elf 0x7c00",
+                    "description": "load stage1 (Realmode) symbols",
+                    "ignoreFailures": false
+                },
+                { 
+                    "text": "add-symbol-file ${workspaceFolder}/bazel-bin/src/bootloader/stage2.elf 0x8000",
+                    "description": "load stage2 symbols",
+                    "ignoreFailures": false
+                },
+                {   "text": "symbol-file ${workspaceFolder}/bazel-bin/src/kernel/kernel.elf",
+                    "description": "load kernel symbols",
+                    "ignoreFailures": false
+                },        
                 {
                     "description": "Hex output",
-                    "text": "set output-radix 16",
+                    "text": "set disassembly-flavor intel",
                     "ignoreFailures": true
                 }
             ],
+            "launchCompleteCommand": "None",
             "externalConsole": false
         }
     ]

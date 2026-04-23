@@ -10,7 +10,7 @@
         {
             "label": "Build myOS",
             "type": "shell",
-            "command": "bazel build //:disk_image && chmod 666 $(bazel info bazel-bin)/disk.img",// && chmod +x $(bazel info bazel-bin)/src/kernel/kernel_elf",
+            "command": "bazel build //:disk_image -c dbg && chmod 666 $(bazel info -c dbg bazel-bin)/disk.img",// && chmod +x $(bazel info bazel-bin)/src/kernel/kernel_elf",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -19,26 +19,17 @@
         {
             "label": "Run QEMU",
             "type": "shell",
-            "command": "qemu-system-x86_64 -drive format=raw,file=$(bazel info bazel-bin)/disk.img",
+            "command": "qemu-system-x86_64 -drive format=raw,file=$(bazel info -c dbg bazel-bin)/disk.img",
             "dependsOn": "Build myOS",
             "problemMatcher": []
         },
         {
             "label": "Debug QEMU",
             "type": "shell",
-            "command": "qemu-system-x86_64 -drive format=raw,file=$(bazel info bazel-bin)/disk.img -s -S &",
-            "dependsOn": "Build myOS",
+            "command": "qemu-system-x86_64 -drive format=raw,file=$(bazel info -c dbg bazel-bin)/disk.img -S -s",
             "isBackground": true,
-            "problemMatcher": {
-                "pattern": {
-                    "regexp": "."
-                },
-                "background": {
-                    "activeOnStart": true,
-                    "beginsPattern": ".",
-                    "endsPattern": "."
-                }
-            }
+            "dependsOn": "Build myOS",
+            "problemMatcher": []
         }
     ]
 }

@@ -1,12 +1,12 @@
 [BITS 64]
 
 section .entry
-global _start
+global kernel_start
 extern kernel_main
 
 KERNEL_MAGIC    equ 0xBEBAFECA
 
-_start:
+kernel_start:
     dd KERNEL_MAGIC 
     mov rsp, stack_top
     mov rbp, rsp

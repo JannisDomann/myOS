@@ -7,6 +7,8 @@ def _nasm_object_impl(ctx):
         inputs = [src] + srcs, # Hier werden die Dateien für die Sandbox registriert
         outputs = [out],
         arguments = [
+            "-g",
+            "-F", "dwarf",
             "-f", "elf32",
             "-I" + src.dirname + "/", # Füge das Verzeichnis der Quelle als Include-Pfad hinzu
             src.path,
@@ -26,6 +28,8 @@ def _nasm_object_impl_64(ctx):
         inputs = [src] + srcs, # Hier werden die Dateien für die Sandbox registriert
         outputs = [out],
         arguments = [
+            "-g",
+            "-F", "dwarf",
             "-f", "elf64",
             "-I" + src.dirname + "/", # Füge das Verzeichnis der Quelle als Include-Pfad hinzu
             src.path,

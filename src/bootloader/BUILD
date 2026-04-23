@@ -4,12 +4,49 @@ load("@rules_cc//cc:defs.bzl", "cc_import")
 load("//tools/nasm:nasm.bzl", "nasm_binary")
 load("//tools/nasm:nasm.bzl", "nasm_object")
 
-nasm_binary(
-    name = "stage1",
+nasm_object(
+    name = "stage1_obj",
     src = "stage1/stage1.asm",
-    out = "stage1.bin",
+    out = "stage1.o",
     visibility = ["//visibility:public"],
 )
+
+cc_binary(
+    name = "stage1.elf",
+    srcs = [":stage1_obj"],
+    features = [
+        "-default_link_libs",
+    ],
+    linkstatic = True,
+    copts = [
+        "-m32",
+        "-ffreestanding",
+        "-fno-pie",
+        "-fno-stack-protector",
+        "-O0",
+        "-g",
+    ],
+    linkopts = [
+        "-m32",
+        "-T", "$(location //src/linker:stage1.ld)",
+        "-nostdlib",
+        "-static",
+        "-no-pie",
+        "-Wl,--build-id=none",
+    ],
+    additional_linker_inputs = ["//src/linker:stage1.ld"],
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "stage1_bin",
+    srcs = [":stage1.elf"],
+    outs = ["stage1.bin"],
+    cmd = "objcopy -O binary $(SRCS) $@",
+    visibility = ["//visibility:public"],
+)
+
+
 
 nasm_object(
     name = "stage2_startup_obj",
@@ -53,7 +90,7 @@ cc_library(
 )
 
 cc_binary(
-    name = "stage2_elf",
+    name = "stage2.elf",
     srcs = [
         "stage2/stage2.c",
     ],
@@ -71,6 +108,7 @@ cc_binary(
         "-fno-pie",
         "-fno-stack-protector",
         "-O0",
+        "-g",
     ],
     linkopts = [
         "-m32",
@@ -86,7 +124,7 @@ cc_binary(
 
 genrule(
     name = "stage2_bin",
-    srcs = [":stage2_elf"],
+    srcs = [":stage2.elf"],
     outs = ["stage2.bin"],
     cmd = "objcopy -O binary $(SRCS) $@",
     visibility = ["//visibility:public"],

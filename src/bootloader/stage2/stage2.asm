@@ -1,6 +1,8 @@
 [BITS 16]
 
 section .entry
+global stage2_start
+extern stage2_main
 
 ; --- constants ---
 CR  equ 0x0D    ; Carriage
@@ -13,7 +15,6 @@ SCA_PORT            equ 0x92
 CR0_PE              equ 0x01
 SCA_A20             equ 0x02
 
-global stage2_start
 stage2_start:
     jmp 0x0000:init             ; CS normalization (far jump)
 
@@ -115,7 +116,6 @@ init_pm32:
     mov ebp, esp
 
     ; call C code
-    extern stage2_main
     call stage2_main
 
 .halt:

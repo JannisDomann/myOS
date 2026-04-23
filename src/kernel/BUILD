@@ -32,7 +32,7 @@ cc_library(
 )
 
 cc_binary(
-    name = "kernel_elf",
+    name = "kernel.elf",
     srcs = [
         "kernel.c",
     ],
@@ -54,22 +54,23 @@ cc_binary(
         "-mno-mmx",
         "-mno-red-zone", 
         "-O0",
+        "-g",
     ],
     linkopts = [
         "-m64",
-        "-T", "$(location //src/linker:linker.ld)",
+        "-T", "$(location //src/linker:kernel.ld)",
         "-nostdlib",
         "-static",
         "-no-pie",
         "-Wl,--build-id=none",
     ],
-    additional_linker_inputs = ["//src/linker:linker.ld"],
+    additional_linker_inputs = ["//src/linker:kernel.ld"],
     visibility = ["//visibility:public"],
 )
 
 genrule(
     name = "kernel_bin",
-    srcs = [":kernel_elf"],
+    srcs = [":kernel.elf"],
     outs = ["kernel.bin"],
     cmd = "objcopy -O binary $(SRCS) $@",
     visibility = ["//visibility:public"],

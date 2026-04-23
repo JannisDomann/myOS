@@ -1,5 +1,7 @@
 [BITS 16]
-[ORG 0x7C00]
+
+section .entry
+global stage1_start
 
 ; --- constants ---
 STAGE2_STARTOFFSET  equ 0x7E00  ; stage 2 start offset
@@ -9,7 +11,7 @@ CR                  equ 0x0D    ; Carriage Return
 NL                  equ 0x0A    ; New Line
 
 
-start:
+stage1_start:
     jmp 0x0000:init             ; CS normalization (far jump)
 
 init:
