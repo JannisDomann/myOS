@@ -2,26 +2,12 @@
 #include "../include/memory.h"
 
 void k_clear_screen() {
-	char* videoBufferStart = (char*)0xb8000;
-	char* videoBuffer = videoBufferStart;
-	char cols = 80;
-	char rows = 25;
-	char bg = 0x00;
-	char fg = 0x07;
-
-	while (videoBuffer < (char*)videoBufferStart+cols*rows*0x02) {
-		*videoBuffer++ = 0x20; // space
-		*videoBuffer++ = ((bg << 0x04) & 0xf0) | fg & 0x0f;
-	}
+	k_memset_u16(VGA_BUFFER, BLANK, (VGA_MAX_ROWS * VGA_MAX_COLS));
 }
 
 void k_scroll() {
-	volatile uint16_t* videoBufferStart = (volatile uint16_t*)0xb8000;
-	const uint8_t MAX_ROWS = 25;
-	const uint8_t MAX_COLS = 80;
-
-	k_memcpy(videoBufferStart, videoBufferStart + MAX_COLS, (MAX_ROWS - 1) * MAX_COLS * sizeof(uint16_t) / sizeof(uint64_t));
-	k_memset(videoBufferStart + (MAX_ROWS - 1) * MAX_COLS, 0x00, MAX_COLS * sizeof(uint16_t) / sizeof(uint64_t));
+	k_memcpy_u16(VGA_BUFFER, VGA_BUFFER + VGA_MAX_COLS, (VGA_MAX_ROWS - 1) * VGA_MAX_COLS);
+	k_memset_u16(VGA_BUFFER + (VGA_MAX_ROWS - 1) * VGA_MAX_COLS, BLANK, VGA_MAX_COLS);
 }
 
 void k_update_cursor(uint8_t row, uint8_t col) {
@@ -39,10 +25,7 @@ void k_update_cursor(uint8_t row, uint8_t col) {
 
 
 void k_print(char chr, uint8_t attrib) {
-	volatile uint16_t* videoBufferStart = (volatile uint16_t*)0xb8000;
-	const uint8_t MAX_ROWS = 25;
-	const uint8_t MAX_COLS = 80;
-
+	uint16_t* videoBuffer = VGA_BUFFER;
 	static uint8_t row = 0;
 	static uint8_t col = 0;
 	
@@ -52,16 +35,16 @@ void k_print(char chr, uint8_t attrib) {
 		col = 0;
 	}
 	else {
-		videoBufferStart[row * MAX_COLS + col] = (uint16_t)(chr | attrib << 8);
+		videoBuffer[row * VGA_MAX_COLS + col] = (uint16_t)(chr | attrib << 8);
         ++col;
 	}
 
-	if (col >= MAX_COLS) {
+	if (col >= VGA_MAX_COLS) {
 		col = 0;
 		++row;
 	}
 
-	if (row >= MAX_ROWS) {
+	if (row >= VGA_MAX_ROWS) {
 		k_scroll();
 		--row;
 	}

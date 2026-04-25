@@ -3,28 +3,34 @@
 #include <stdarg.h>
 
 void k_int2str(int value, char* str) {
+	uint32_t val = (uint32_t)value;
+
 	if (value < 0) {
 		*str++ = '-';
-		value = -value;
+		val = -value;
 	}
 
 	char buffer[32] = {0};
 	char* p_buffer = &buffer[31];
+	*p_buffer = '\0';
 	
 	do {
-		*(--p_buffer) = (value % 10)+'0';
-		value /= 10;
-	} while (value>0);
+		*(--p_buffer) = (val % 10)+'0';
+		val /= 10;
+	} while (val>0);
 	
 	while (*p_buffer != '\0') {
 		*str++ = *p_buffer++;
 	}
+
+	*str = '\0';
 }
 
 void k_hex2str(uint64_t value, char* str) {
+	char* hex_chars = "0123456789ABCDEF";
 	char buffer[32] = {0};
 	char* p_buffer = &buffer[31];
-	char* hex_chars = "0123456789ABCDEF";
+	*p_buffer = '\0';
 
 	do {
 		*(--p_buffer) = hex_chars[value % 16];
@@ -34,16 +40,38 @@ void k_hex2str(uint64_t value, char* str) {
 	while (*p_buffer != '\0') {
 		*(str++) = *(p_buffer++);
 	}
+
+	*str = '\0';
 }
 
 void k_printf(const char* format, ...) {
 	PRINT_STATE state = PS_NORMAL;
-	uint8_t attrib = 0x02;
+	uint8_t attrib = STD_ATTRIBUTE;
 
 	va_list args;
 	va_start(args, format);
 	
 	for (uint32_t i=0; format[i] != '\0'; ++i) {
+
+		if (format[i] == '\x1B') {
+			state = PS_COLOR;
+			continue;
+		}
+		else if (format[i] == '\t') {
+			k_print_s("    ", attrib);
+			continue;
+		}
+
+		if (state == PS_COLOR) {
+			if (format[i] == 'R') {
+				attrib = STD_ATTRIBUTE;
+			} else {
+				attrib = (uint8_t)format[i];
+			}
+			state = PS_NORMAL;
+			continue;
+		}
+
 		if (format[i] == '%') {
 			if (format[i+1] == '\0') {
 				k_print(format[i], attrib);

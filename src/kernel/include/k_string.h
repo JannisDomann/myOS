@@ -9,7 +9,8 @@ extern "C" {
 
 typedef enum {
     PS_NORMAL,
-    PS_FORMAT
+    PS_FORMAT,
+    PS_COLOR,
 } PRINT_STATE;
 
 

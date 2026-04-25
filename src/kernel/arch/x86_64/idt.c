@@ -69,9 +69,10 @@ void idt_init() {
 
 void isr_handler(interrupt_registers_t* regs) {
     if (regs->int_no < 32) {
-        k_printf("\n[CPU EXCEPTION] %s (Vector %d)\n", 
+        
+        k_printf("\n" CLR_ERROR "[CPU EXCEPTION]" CLR_RESET " %s (Vector %d)", 
                 exception_messages[regs->int_no], regs->int_no);
-        k_printf("RIP: 0x%x | Error Code: %d\n", regs->rip, regs->err_code);
+        k_printf("\tRIP: 0x%x | Error Code: %d\n", regs->rip, regs->err_code);
         
         // Halt the system
         while(1) {
