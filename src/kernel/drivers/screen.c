@@ -1,5 +1,6 @@
 #include "../include/screen.h"
 #include "../include/memory.h"
+#include "../include/io.h"
 
 void k_clear_screen() {
 	k_memset_u16(VGA_BUFFER, BLANK, (VGA_MAX_ROWS * VGA_MAX_COLS));
@@ -15,24 +16,36 @@ void k_update_cursor(uint8_t row, uint8_t col) {
     uint16_t pos = row * VGA_MAX_COLS + col;
 
     // Send the high byte (bits 8-15)
-    outb_asm(VGA_CTRL_ADDR_PORT, VGA_REG_CURSOR_HIGH);
-    outb_asm(VGA_CTRL_DATA_PORT, (uint8_t)((pos >> 8) & 0xFF));
+    k_outb(VGA_CTRL_ADDR_PORT, VGA_REG_CURSOR_HIGH);
+    k_outb(VGA_CTRL_DATA_PORT, (uint8_t)((pos >> 8) & 0xFF));
 
     // Send the low byte (bits 0-7)
-    outb_asm(VGA_CTRL_ADDR_PORT, VGA_REG_CURSOR_LOW);
-    outb_asm(VGA_CTRL_DATA_PORT, (uint8_t)(pos & 0xFF));
+    k_outb(VGA_CTRL_ADDR_PORT, VGA_REG_CURSOR_LOW);
+    k_outb(VGA_CTRL_DATA_PORT, (uint8_t)(pos & 0xFF));
 }
-
 
 void k_print(char chr, uint8_t attrib) {
 	uint16_t* videoBuffer = VGA_BUFFER;
 	static uint8_t row = 0;
 	static uint8_t col = 0;
 	
-
 	if (chr == '\n') {
 		++row;
 		col = 0;
+	}
+	else if (chr == '\b') {
+		if (col > 0) {
+			--col;
+		} else if (row > 0) {
+			--row;
+			col = VGA_MAX_COLS - 1;
+
+			while (col > 0 && (videoBuffer[row * VGA_MAX_COLS + col] & 0xFF) == SPACE) {
+				--col;
+			}
+		}
+
+		k_memset_u16(VGA_BUFFER + row * VGA_MAX_COLS + col, BLANK, 0x01);
 	}
 	else {
 		videoBuffer[row * VGA_MAX_COLS + col] = (uint16_t)(chr | attrib << 8);
