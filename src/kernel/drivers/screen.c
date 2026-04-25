@@ -1,6 +1,7 @@
 #include "../include/screen.h"
 #include "../include/memory.h"
 #include "../include/io.h"
+#include "../include/lib.h"
 
 void k_clear_screen() {
 	k_memset_u16(VGA_BUFFER, BLANK, (VGA_MAX_ROWS * VGA_MAX_COLS));
@@ -32,6 +33,11 @@ void k_print(char chr, uint8_t attrib) {
 	if (chr == '\n') {
 		++row;
 		col = 0;
+	}
+	else if (chr == '\t') {
+		uint8_t new_col = min(col+4, VGA_MAX_COLS);
+		k_memset_u16(VGA_BUFFER + row * VGA_MAX_COLS + col, BLANK, new_col);
+		col = new_col;
 	}
 	else if (chr == '\b') {
 		if (col > 0) {

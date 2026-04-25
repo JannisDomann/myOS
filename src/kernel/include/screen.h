@@ -26,6 +26,8 @@ extern "C" {
 #define SPACE                   0x20
 #define BLANK                   ((((uint16_t)STD_ATTRIBUTE << 0x08) | (uint16_t)SPACE))
 
+#define TAB                     "    "
+
 /*
 Wert	Farbe (Dunkel)	        Wert	Farbe (Hell)
 0x00	Black (Schwarz)	        0x08	Dark Grey (Dunkelgrau)

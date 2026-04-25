@@ -58,7 +58,7 @@ void k_printf(const char* format, ...) {
 			continue;
 		}
 		else if (format[i] == '\t') {
-			k_print_s("    ", attrib);
+			k_print_s(TAB, attrib);
 			continue;
 		}
 
