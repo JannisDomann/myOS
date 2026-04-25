@@ -10,9 +10,9 @@ nasm_object_64(
 )
 
 nasm_object_64(
-    name = "util_obj",
-    src = "arch/x86_64/util64.asm",
-    out = "util64.o",
+    name = "io_obj",
+    src = "arch/x86_64/io.asm",
+    out = "io.o",
 )
 
 nasm_object_64(
@@ -25,7 +25,7 @@ cc_import(
     name = "kernel_startup",
     objects = [
         ":kernel_startup_obj",
-        ":util_obj",
+        ":io_obj",
         ":interrupts_obj",
     ],
 )

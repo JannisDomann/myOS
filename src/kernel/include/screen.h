@@ -22,9 +22,9 @@ extern "C" {
 // Standard Attributes
 #define STD_FOREGROUND          0x0F
 #define STD_BACKGROUND          0x01
-#define STD_ATTRIBUTE           (((STD_BACKGROUND << 0x04) & 0xF0) | STD_FOREGROUND & 0x0F)
+#define STD_ATTRIBUTE           (((STD_BACKGROUND << 0x04) & 0xF0) | (STD_FOREGROUND & 0x0F))
 #define SPACE                   0x20
-#define BLANK                   (((uint16_t)STD_ATTRIBUTE<< 0x08) | (uint16_t)SPACE)
+#define BLANK                   ((((uint16_t)STD_ATTRIBUTE << 0x08) | (uint16_t)SPACE))
 
 /*
 Wert	Farbe (Dunkel)	        Wert	Farbe (Hell)
@@ -48,8 +48,6 @@ void k_scroll();
 void k_update_cursor(uint8_t row, uint8_t col);
 void k_print(char chr, uint8_t attrib);
 void k_print_s(const char* txt, uint8_t attrib);
-
-extern void outb_asm(uint16_t port, uint8_t val);
 
 #ifdef __cplusplus
 }

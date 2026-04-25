@@ -16,14 +16,15 @@ page_table_p pdpt = (page_table_p)0x2000;
 page_table_p pd   = (page_table_p)0x3000;
 
 void memset(const void* dest, uint8_t value, uint32_t size) {
-    uint8_t *p = dest;
+    uint8_t* p = (uint8_t*)dest;
     for (uint32_t i=0; i<size; ++i) {
         p[i] = value;
     }
 }
 
 uint32_t memcmp(const void* s1, const void* s2, uint32_t n) {
-    const uint8_t *p1 = s1, *p2 = s2;
+    const uint8_t* p1 = (uint8_t*)s1;
+    const uint8_t* p2 = (uint8_t*)s2;
     for (uint32_t i = 0; i < n; i++) {
         if (p1[i] != p2[i]) return p1[i] - p2[i];
     }
