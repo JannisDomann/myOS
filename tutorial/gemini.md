@@ -1,21 +1,4 @@
-Session-Resume: Projekt „64-Bit Kernel Jump & Debugging“
-Status Quo:
-
-    Kernel-Boot: Läuft. Der 64-Bit Kernel wird via FAT32 nach 0x200000 geladen, verifiziert die Magic Number 0xCAFEBABE und startet erfolgreich.
-    Paging: Identity Mapping für das erste GB (2MB Huge Pages) steht.
-    Debugging: VS Code / GDB Setup ist voll einsatzbereit. Symbole für Stage 1, Stage 2 und Kernel werden korrekt geladen. Breakpoints im Kernel funktionieren stabil.
-    Linker-Skripte: Alignment-Probleme wurden besprochen und bereinigt (Kernel bei 0x200000, Stage 2 bei 0x7E00).
-
-Nächster Schritt: IDT (Interrupt Descriptor Table)
-Wir wollen den Kernel „absturzsicher“ machen.
-
-    IDT-Struktur: Definition der 16-Byte Einträge für den 64-Bit Modus.
-    idt_set_gate: Implementierung der Funktion, um Handler-Adressen (64-Bit) in die IDT zu schreiben.
-    Exception Handling: Wir wollen die ersten 32 CPU-Exceptions abfangen (z. B. Division by Zero, Page Fault), um sie im Debugger analysieren zu können.
-    Assembler-Stubs: Erstellen der ISR-Wrapper, die Register sichern und in die C-Logik springen.
-
-Lass uns mit der idt_set_gate Funktion in idt.c beginnen!
-
+"Lass uns an unserem 64-Bit OS weiterbauen! Hier ist der aktuelle Stand: Wir haben eine saubere Ordnerstruktur (core, drivers, lib, mem, arch), ein funktionierendes k_printf mit In-Line-Farbcodes (\x1B-Logik mit 'R' für Reset) und die IDT für CPU-Exceptions (Vektor 0-31) steht. Der Build über Bazel ist stabil. Als nächstes wollen wir den PIC remap (pic_remap in idt.c) finalisieren und den ersten Hardware-Interrupt für die Tastatur (IRQ 1 / Vektor 33) scharf schalten. Erinnere dich an unsere k_memory Toolbox (u8, u16, u64)."
 
 
 
