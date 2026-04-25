@@ -86,6 +86,7 @@ cc_library(
         "stage2/stage2.h",
         "stage2/MBR.h",
         "stage2/FAT32.h",
+        "stage2/ATA_driver.h",
     ],
 )
 

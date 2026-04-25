@@ -1,0 +1,16 @@
+#include "kernel.h"
+
+void kernel_main() {
+	k_clear_screen();
+
+	// enable idt
+	idt_init();
+
+	k_printf("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\nblubb");
+	
+	int x = 7/0;
+
+    while (1) {
+        __asm("hlt");
+    }
+}

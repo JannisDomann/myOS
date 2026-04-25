@@ -5,8 +5,8 @@ global stage2_start
 extern stage2_main
 
 ; --- constants ---
-CR  equ 0x0D    ; Carriage
-NL  equ 0x0A    ; New Line
+CR  equ 0x0D                    ; Carriage Return
+NL  equ 0x0A                    ; New Line
 
 ; --- System Control Ports ---
 SCA_PORT            equ 0x92

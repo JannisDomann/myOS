@@ -10,7 +10,6 @@ STAGE2_SECTORS      equ 0x10    ; sector 16 sectors to be loaded
 CR                  equ 0x0D    ; Carriage Return
 NL                  equ 0x0A    ; New Line
 
-
 stage1_start:
     jmp 0x0000:init             ; CS normalization (far jump)
 
@@ -20,7 +19,7 @@ init:
     mov ds, ax
     mov es, ax
     mov ss, ax
-    mov sp, 0x7C00              ; stack grows downwards from ORG
+    mov sp, 0x7C00              ; stack grows downwards from .entry
 
     ; safe boot drive
     mov [BOOT_DRIVE], dl
@@ -30,6 +29,7 @@ init:
     call print_string
 
     ; load stage 2 via bios int 13h func 0x02 (read sectors)
+    ; try up to 3 times with disk reset on error
     mov di, 0x03
 .retry:
     mov ah, 0x02                ; call function 2
@@ -43,7 +43,8 @@ init:
     int 0x13
     jnc .success
 
-    xor ax, ax                  ; up to 3x disk reset on error
+    ; disk reset
+    xor ax, ax
     int 0x13
     dec di
     jnz .retry

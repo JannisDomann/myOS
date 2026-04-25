@@ -1,0 +1,17 @@
+#include "../include/memory.h"
+
+void k_memcpy(const void* dest, const void* src, uint64_t count) {
+	uint64_t* d = (uint64_t*)dest;
+	uint64_t* s = (uint64_t*)src;
+	for (uint64_t i=0; i<count; ++i) {
+		*d++ = *s++;
+	}
+}
+
+void k_memset(const void* dest, uint64_t value, uint64_t count) {
+	uint64_t* d = (uint64_t*)dest;
+	for (uint64_t i=0; i<count; ++i) {
+		*d++ = value;
+	}
+}
+

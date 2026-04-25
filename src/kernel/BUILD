@@ -1,19 +1,24 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_cc//cc:defs.bzl", "cc_import")
-load("//tools/nasm:nasm.bzl", "nasm_object")
 load("//tools/nasm:nasm.bzl", "nasm_object_64")
 
 nasm_object_64(
     name = "kernel_startup_obj",
-    src = "kernel.asm",
-    out = "kernel.o",
+    src = "arch/x86_64/kernel.asm",
+    out = "kernel_startup.o",
 )
 
 nasm_object_64(
     name = "util_obj",
-    src = "util64.asm",
+    src = "arch/x86_64/util64.asm",
     out = "util64.o",
+)
+
+nasm_object_64(
+    name = "interrupts_obj",
+    src = "arch/x86_64/interrupts.asm",
+    out = "interrupts.o",
 )
 
 cc_import(
@@ -21,24 +26,38 @@ cc_import(
     objects = [
         ":kernel_startup_obj",
         ":util_obj",
+        ":interrupts_obj",
     ],
 )
 
 cc_library(
-    name = "kernel_hdrs",
-    hdrs = [
-        "kernel.h",
+    name = "kernel_lib",
+    srcs = glob([
+        "core/*.c",
+        "drivers/*.c",
+        "lib/*.c",
+        "mem/*.c",
+        "arch/x86_64/*.c",
+    ]),
+    deps = [
+        ":kernel_startup",
+        "//src/kernel/include:headers",
+    ],
+    copts = [
+        "-m64",
+        "-ffreestanding",
+        "-fno-stack-protector",
+        "-mno-red-zone", 
     ],
 )
 
 cc_binary(
     name = "kernel.elf",
     srcs = [
-        "kernel.c",
+        ":kernel_startup_obj",
     ],
     deps = [
-        ":kernel_startup",
-        ":kernel_hdrs",
+        ":kernel_lib",
     ],
     features = [
         "-default_link_libs",

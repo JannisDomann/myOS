@@ -1,6 +1,6 @@
 [BITS 64]
 
-global outb_asm
+global outb_asm, load_idt
 
 outb_asm:
     push rbp
@@ -12,4 +12,8 @@ outb_asm:
 
     pop rbp
     ret
-    
+
+load_idt:
+    lidt [rdi]      ; RDI holds the pointer to idtp (System V ABI)
+    ; sti             ; We might want to enable interrupts later specifically
+    ret

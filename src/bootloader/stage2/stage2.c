@@ -1,6 +1,7 @@
 #include "stage2.h"
 #include "MBR.h"
 #include "FAT32.h"
+#include "ATA_driver.h"
 
 /*
     PML4 (Page Map Level 4)
@@ -49,24 +50,32 @@ void setup_paging() {
 void read_sectors_ata(uint32_t lba, uint8_t count, uint32_t dest_addr) {
     uint16_t* ptr = (uint16_t*)dest_addr;
 
-    // ATA PIO protocol for Master Drive
-    outb_asm(0x1F6, 0xE0 | ((lba >> 24) & 0x0F));
-    outb_asm(0x1F2, count);
-    outb_asm(0x1F3, (uint8_t)lba);
-    outb_asm(0x1F4, (uint8_t)(lba >> 8));
-    outb_asm(0x1F5, (uint8_t)(lba >> 16));
-    outb_asm(0x1F7, 0x20); // Command 0x20: Read with retry
+    // Select drive and send the highest 4 bits of the LBA address
+    outb_asm(ATA_DRIVE_SELECT_PORT, ATA_DRIVE_MASTER | ((lba >> 24) & 0x0F));
+    
+    // Set the number of sectors to be read
+    outb_asm(ATA_SECTOR_COUNT_PORT, count);
+    
+    // Send the remaining 24 bits of the LBA address
+    outb_asm(ATA_LBA_LOW_PORT,  (uint8_t)lba);
+    outb_asm(ATA_LBA_MID_PORT,  (uint8_t)(lba >> 8));
+    outb_asm(ATA_LBA_HIGH_PORT, (uint8_t)(lba >> 16));
+    
+    // Issue the PIO Read command
+    outb_asm(ATA_COMMAND_STAT_PORT, ATA_CMD_READ_PIO);
 
     for (int i = 0; i < count; i++) {
-        // Wait for BSY (Bit 7) deleted and DRQ (Bit 3) set
-        while ((inb_asm(0x1F7) & 0x88) != 0x08);
+        // Poll status: Wait until BSY is cleared AND DRQ is set
+        while ((inb_asm(ATA_COMMAND_STAT_PORT) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)) != ATA_STATUS_DRQ);
 
-        // read 256 words (512 Bytes) per sector
+        // Transfer one sector (256 words = 512 bytes) into RAM
         for (int j = 0; j < 256; j++) {
-            *ptr++ = inw_asm(0x1F0);
+            *ptr++ = inw_asm(ATA_DATA_PORT);
         }
     }
 }
+
+
 
 uint32_t find_partition_start() {
     uint8_t sector_buffer[512];
