@@ -1,5 +1,24 @@
 #pragma once
+
 #include <stdint.h>
+
+// PICs
+#define PIC1_COMMAND    0x20
+#define PIC1_DATA       0x21
+#define PIC2_COMMAND    0xA0
+#define PIC2_DATA       0xA1
+
+#define ICW1_INIT       0x10    // Start initialization sequence
+#define ICW1_ICW4       0x01    // ICW4 will be present
+#define ICW4_8086       0x01    // 8086/88 (MCS-80/85) mode
+
+#define PIC1_OFFSET     0x20    // Vector offset for Master (32-39)
+#define PIC2_OFFSET     0x28    // Vector offset for Slave (40-47)
+
+#define PIC_EOI         0x20    // End of Interrupt command
+
+// Interrupts
+#define INT_KEYBD       0x21  
 
 // IDT entry structure (16 bytes in 64-bit mode)
 struct idt_entry {
@@ -18,15 +37,6 @@ struct idt_ptr {
     uint64_t base;          // Base address of IDT
 } __attribute__((packed));
 
-// Function declarations
-void idt_set_gate(uint8_t num, uint64_t base, uint16_t sel, uint8_t flags);
-void idt_init();
-
-// Assembly helper to load the IDTR
-extern void load_idt(uint64_t idtp_addr);
-extern void isr0(void); 
-extern uint64_t isr_stub_table[];
-
 // CPU interrupt registers
 typedef struct {
     uint64_t r15, r14, r13, r12, r11, r10, r9, r8;
@@ -35,5 +45,25 @@ typedef struct {
     uint64_t rip, cs, rflags, rsp, ss;  // Pushed by CPU automatically
 } interrupt_registers_t;
 
+// typedefs
+typedef void (*interrupt_handler_t)(interrupt_registers_t*);
+
+// Function declarations
+void idt_set_gate(uint8_t num, uint64_t base, uint16_t sel, uint8_t flags);
+void idt_init();
+
+// Assembly helper to load the IDTR
+extern void load_idt(uint64_t idtp_addr);
+extern uint64_t isr_stub_table[];
+extern void halt();
+extern void cli();
+extern void sti();
+
 // Declaration of the C-Handler
 void isr_handler(interrupt_registers_t* regs);
+
+// remap pic for processing hardware interrupts
+void pic_remap();
+
+// rergister int handler
+void register_interrupt_handler(uint8_t n, interrupt_handler_t handler);

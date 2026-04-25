@@ -4,6 +4,7 @@
 // The actual table and pointer stored in RAM
 struct idt_entry idt[256];
 struct idt_ptr idtp;
+interrupt_handler_t interrupt_handlers[256];
 
 // Human readable messages for the first 32 exceptions
 const char* exception_messages[] = {
@@ -52,12 +53,15 @@ void idt_set_gate(uint8_t num, uint64_t base, uint16_t sel, uint8_t flags) {
 }
 
 void idt_init() {
+    // remap pic
+    pic_remap();
+
     // Set IDT pointer
     idtp.limit = (sizeof(struct idt_entry) * 256) - 1;
     idtp.base  = (uint64_t)&idt;
 
-    // Loop through the first 32 exceptions
-    for (uint8_t i = 0; i < 32; i++) {
+    // Loop through the first 32 exceptions and 16 hardware interrupts
+    for (uint8_t i = 0; i < 48; i++) {
         idt_set_gate(i, isr_stub_table[i], 0x18, 0x8E);
     }
 
@@ -68,15 +72,66 @@ void idt_init() {
 }
 
 void isr_handler(interrupt_registers_t* regs) {
-    if (regs->int_no < 32) {
-        
-        k_printf("\n" CLR_ERROR "[CPU EXCEPTION]" CLR_RESET " %s (Vector %d)", 
-                exception_messages[regs->int_no], regs->int_no);
+    if (interrupt_handlers[regs->int_no] != 0) {
+        interrupt_handlers[regs->int_no](regs);
+    }
+    else if (regs->int_no < 32) {
+        // [EXCEPTION HANDLING]
+        k_printf("\n" CLR_ERROR "[CPU EXCEPTION]" CLR_RESET " %s (Vector %d)", exception_messages[regs->int_no], regs->int_no);
         k_printf("\tRIP: 0x%x | Error Code: %d\n", regs->rip, regs->err_code);
         
         // Halt the system
-        while(1) {
-            __asm__("hlt");
-        }
+        halt();
     }
+    
+    if (regs->int_no >= 32 && regs->int_no < 48) {
+        // Hardware Interrupts (IRQs) always need an EOI
+        // Send EOI to PIC
+        if (regs->int_no >= 40) {
+            k_outb(PIC2_COMMAND, PIC_EOI); // Slave
+        }
+        k_outb(PIC1_COMMAND, PIC_EOI);    // Master
+    }
+}
+
+void pic_remap() {
+    // Save current masks to restore them later or modify them
+    uint8_t mask1 = k_inb(PIC1_DATA);
+    uint8_t mask2 = k_inb(PIC2_DATA);
+
+    // ICW1: Start initialization in cascade mode
+    k_outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
+    k_io_wait();
+    k_outb(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
+    k_io_wait();
+
+    // ICW2: Set Vector Offsets
+    // Master PIC vectors will start at 32 (0x20)
+    k_outb(PIC1_DATA, PIC1_OFFSET);
+    k_io_wait();
+    // Slave PIC vectors will start at 40 (0x28)
+    k_outb(PIC2_DATA, PIC2_OFFSET);
+    k_io_wait();
+
+    // ICW3: Tell Master PIC there is a slave PIC at IRQ2 (0000 0100b)
+    k_outb(PIC1_DATA, 0x04);
+    k_io_wait();
+    // Tell Slave PIC its cascade identity (2)
+    k_outb(PIC2_DATA, 0x02);
+    k_io_wait();
+
+    // ICW4: Set mode to 8086/88 (required for x86 systems)
+    k_outb(PIC1_DATA, ICW4_8086);
+    k_io_wait();
+    k_outb(PIC2_DATA, ICW4_8086);
+    k_io_wait();
+
+    // Restore masks (or set new ones)
+    // To enable only Keyboard (IRQ1), you would use: k_outb(PIC1_DATA, 0xFD);
+    k_outb(PIC1_DATA, mask1);
+    k_outb(PIC2_DATA, mask2);
+}
+
+void register_interrupt_handler(uint8_t n, interrupt_handler_t handler) {
+    interrupt_handlers[n] = handler;
 }
