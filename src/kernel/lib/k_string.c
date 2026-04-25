@@ -86,7 +86,6 @@ void k_printf(const char* format, ...) {
 		}
 		else {
 			state = PS_NORMAL;
-
 		}
 		
 
@@ -109,6 +108,14 @@ void k_printf(const char* format, ...) {
 				case 's': {
 					char* value = va_arg(args, char*);
 					k_print_s(value, attrib);
+					break;
+				}
+				case 'c': {
+					char value = va_arg(args, int);
+					k_print(value, attrib);
+					break;
+				}
+				default: {
 					break;
 				}
 			}
