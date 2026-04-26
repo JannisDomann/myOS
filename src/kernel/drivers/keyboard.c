@@ -24,9 +24,8 @@ void keyboard_init() {
     // Register the callback for Vector 33 (IRQ 1)
     register_interrupt_handler(INT_KEYBD, keyboard_handler);
 
-    // unmask Keyboard (IRRQ1)
-    k_outb(PIC1_DATA, 0xFF & ~0b00000010);
-    k_outb(PIC2_DATA, 0xFF);
+    // unmask Keyboard (IRQ1)
+    pic_unmask(0x01);
 }
 
 void keyboard_handler(interrupt_registers_t* regs) {

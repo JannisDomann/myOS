@@ -62,7 +62,7 @@ void idt_init() {
 
     // Loop through the first 32 exceptions and 16 hardware interrupts
     for (uint8_t i = 0; i < 48; i++) {
-        idt_set_gate(i, isr_stub_table[i], 0x18, 0x8E);
+        idt_set_gate(i, isr_stub_table[i], K_CODE_SEG_SEL, INT_GATE);
     }
 
     // Give the table address to the CPU
@@ -114,10 +114,10 @@ void pic_remap() {
     k_io_wait();
 
     // ICW3: Tell Master PIC there is a slave PIC at IRQ2 (0000 0100b)
-    k_outb(PIC1_DATA, 0x04);
+    k_outb(PIC1_DATA, PIC_MASL_IRQ2);
     k_io_wait();
     // Tell Slave PIC its cascade identity (2)
-    k_outb(PIC2_DATA, 0x02);
+    k_outb(PIC2_DATA, PIC_SL_CA_ID);
     k_io_wait();
 
     // ICW4: Set mode to 8086/88 (required for x86 systems)
@@ -132,6 +132,29 @@ void pic_remap() {
     k_outb(PIC2_DATA, mask2);
 }
 
+void pic_unmask(uint8_t irq) {
+    uint16_t port;
+    uint8_t value;
+
+    cli();
+
+    if (irq < 8) {
+        port = PIC1_DATA;
+    } else {
+        port = PIC2_DATA;
+        irq -= 8;
+        value = k_inb(PIC1_DATA) & ~PIC_MASL_IRQ2;
+        k_outb(PIC1_DATA, value);
+    }
+
+    value = k_inb(port) & ~(1 << irq);
+    k_outb(port, value);
+
+    sti();
+}
+
 void register_interrupt_handler(uint8_t n, interrupt_handler_t handler) {
+    cli();
     interrupt_handlers[n] = handler;
+    sti();
 }

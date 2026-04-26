@@ -8,6 +8,9 @@
 #define PIC2_COMMAND    0xA0
 #define PIC2_DATA       0xA1
 
+#define PIC_MASL_IRQ2   0x04    // Slave Pic at Masters IRQ2 (Bitwise)
+#define PIC_SL_CA_ID    0x02    // Slaves ID at Master
+
 #define ICW1_INIT       0x10    // Start initialization sequence
 #define ICW1_ICW4       0x01    // ICW4 will be present
 #define ICW4_8086       0x01    // 8086/88 (MCS-80/85) mode
@@ -16,6 +19,9 @@
 #define PIC2_OFFSET     0x28    // Vector offset for Slave (40-47)
 
 #define PIC_EOI         0x20    // End of Interrupt command
+
+#define INT_GATE        0x8E    // Define type of interrupt gate
+#define K_CODE_SEG_SEL  0x18    // Kernel Code Segment Selector
 
 // Interrupts
 #define INT_KEYBD       0x21  
@@ -45,16 +51,18 @@ typedef struct {
     uint64_t rip, cs, rflags, rsp, ss;  // Pushed by CPU automatically
 } interrupt_registers_t;
 
-// typedefs
+// typedef interrupt handler callback function
 typedef void (*interrupt_handler_t)(interrupt_registers_t*);
 
-// Function declarations
-void idt_set_gate(uint8_t num, uint64_t base, uint16_t sel, uint8_t flags);
-void idt_init();
+// stub table created in asm
+extern uint64_t isr_stub_table[];
 
 // Assembly helper to load the IDTR
+void idt_set_gate(uint8_t num, uint64_t base, uint16_t sel, uint8_t flags);
+void idt_init();
 extern void load_idt(uint64_t idtp_addr);
-extern uint64_t isr_stub_table[];
+
+// Common function declarations
 extern void halt();
 extern void cli();
 extern void sti();
@@ -64,6 +72,7 @@ void isr_handler(interrupt_registers_t* regs);
 
 // remap pic for processing hardware interrupts
 void pic_remap();
+void pic_unmask(uint8_t irq) ;
 
 // rergister int handler
 void register_interrupt_handler(uint8_t n, interrupt_handler_t handler);

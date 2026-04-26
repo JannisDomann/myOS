@@ -1,5 +1,5 @@
 [BITS 64]
-extern isr_handler ; Our C function
+extern isr_handler  ; Our C function
 
 global load_idt
 load_idt:
@@ -43,10 +43,9 @@ isr%1:
 global irq%1
 irq%1:
     push qword 0    ; Dummy error code
-    push qword %2    ; Vector number (32 + IRQ number)
+    push qword %2   ; Vector number (32 + IRQ number)
     jmp isr_common_stub
 %endmacro
-
 
 ; Define the first 32 ISRs
 ISR_NOERRCODE 0  ; Divide by Zero
@@ -125,7 +124,7 @@ isr_common_stub:
     push r15
 
     ; 2. Call our C handler
-    mov rdi, rsp      ; Pass stack pointer as pointer to a struct
+    mov rdi, rsp    ; Pass stack pointer as pointer to a struct
     call isr_handler
 
     ; 3. Restore CPU state
@@ -154,7 +153,6 @@ isr_common_stub:
 section .data
 align 8
 global isr_stub_table
-
 isr_stub_table:
 %assign i 0 
 %rep    48 
