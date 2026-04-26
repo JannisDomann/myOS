@@ -5,8 +5,11 @@ global stage2_start
 extern stage2_main
 
 ; --- constants ---
-CR  equ 0x0D                    ; Carriage Return
-NL  equ 0x0A                    ; New Line
+MEM_MAP_ADDR    equ 0x10000     ; RAM Map Addr where Kernel can load from
+SMAP            equ 0x534D4150  ; SMAP - signature
+BSIZE           equ 0x18        ; SMAP buffer size
+CR              equ 0x0D        ; Carriage Return
+NL              equ 0x0A        ; New Line
 
 ; --- System Control Ports ---
 SCA_PORT            equ 0x92
@@ -92,6 +95,9 @@ init:
     ; -- load GDT --
     lgdt [gdtr]
 
+    ; detect RAM
+    call detect_memory
+
     ; --- activate Protected Mode ---
     mov eax, cr0
     or eax, CR0_PE
@@ -129,9 +135,9 @@ init_pm32:
 MSG_SUCCESS_A20 db "Gate A20 active.", 0x00
 MSG_GDT_PM      db "Load GDT and activate Protected Mode.", 0x00
 MSG_ERROR_A20   db "Could not activate gate A20.", 0x00
+MSG_ERROR_SRAM  db "Could not detect RAM size.", 0x00
 MSG_REBOOT      db "Press key to reboot..", CR, NL, 0x00
 MSG_NEWLINE     db  CR, NL, 0x00
-
 
 ; --- utility functions ---
 print_string:
@@ -144,3 +150,38 @@ print_string:
     jmp .loop
 .done:
     ret
+
+detect_memory:
+    mov di, MEM_MAP_ADDR + 0x04
+    xor ebx, ebx
+    xor bp, bp
+    mov edx, SMAP
+
+.next_entry:
+    mov ax, 0xE820
+    mov ecx, BSIZE
+    int 0x15
+
+    jc .done
+    cmp eax, SMAP
+    jne .error
+
+    test ebx, ebx
+    jz .last_entry
+
+    add di, BSIZE
+    inc bp
+    jmp. next_entry
+
+.last_entry:
+    inc bp
+
+.done:
+    mov [MEM_MAP_ADDR], bp
+    ret
+
+.error:
+    mov si, MSG_ERROR_SRAM
+    call print_string
+    hlt
+
