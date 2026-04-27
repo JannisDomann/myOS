@@ -1,20 +1,18 @@
 #include "kernel.h"
 
+
 void kernel_main() {
 	k_clear_screen();
 
 	// inits
 	idt_init();
 	keyboard_init();
+	ata_init();
 	sti();
-	
+    k_printf("Interrupts enabled. Keyboard and ATA drivers are active.\n");
+    
 	uint64_t total_blocks = pmm_init();
-
- 	k_printf("Interrupts enabled. Keyboard is active.\n");
-	
-	// k_printf("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\nblubb");
-	
-	// int x = 7/0;
+    k_printf("Physical memory management is active with %dMB of RAM.\n", total_blocks * 0x40 * 0x1000 / (0x400 * 0x400));
 
 	halt();
 }
