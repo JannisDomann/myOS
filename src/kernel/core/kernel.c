@@ -7,6 +7,8 @@ void kernel_main() {
 	idt_init();
 	keyboard_init();
 	sti();
+	
+	uint64_t total_blocks = pmm_init();
 
  	k_printf("Interrupts enabled. Keyboard is active.\n");
 	
