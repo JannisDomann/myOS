@@ -10,6 +10,9 @@
 #define SHIFT_RIGHT     0x36
 #define CAPS_LOCK       0x3A
 
+// Interrupt
+#define INT_KEYBD       0x21  
+
 #ifdef __cplusplus
 extern "C" {
 #endif

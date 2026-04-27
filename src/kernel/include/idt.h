@@ -23,8 +23,6 @@
 #define INT_GATE        0x8E    // Define type of interrupt gate
 #define K_CODE_SEG_SEL  0x18    // Kernel Code Segment Selector
 
-// Interrupts
-#define INT_KEYBD       0x21  
 
 // IDT entry structure (16 bytes in 64-bit mode)
 struct idt_entry {
