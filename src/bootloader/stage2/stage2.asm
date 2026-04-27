@@ -5,7 +5,7 @@ global stage2_start
 extern stage2_main
 
 ; --- constants ---
-MEM_MAP_ADDR    equ 0x10000     ; RAM Map Addr where Kernel can load from
+MEM_MAP_ADDR    equ 0x1000      ; RAM Map Addr where Kernel can load from
 SMAP            equ 0x534D4150  ; SMAP - signature
 BSIZE           equ 0x18        ; SMAP buffer size
 CR              equ 0x0D        ; Carriage Return
@@ -152,13 +152,18 @@ print_string:
     ret
 
 detect_memory:
-    mov di, MEM_MAP_ADDR + 0x04
+    push bp
+
+    mov ax, MEM_MAP_ADDR
+    mov es, ax
+    mov di, 0x0004
+
     xor ebx, ebx
-    xor bp, bp
     mov edx, SMAP
+    xor bp, bp
 
 .next_entry:
-    mov ax, 0xE820
+    mov eax, 0xE820
     mov ecx, BSIZE
     int 0x15
 
@@ -166,22 +171,28 @@ detect_memory:
     cmp eax, SMAP
     jne .error
 
-    test ebx, ebx
-    jz .last_entry
+    test ecx, ecx
+    jz .skip_entry
 
+    inc bp
     add di, BSIZE
-    inc bp
-    jmp. next_entry
 
-.last_entry:
-    inc bp
+.skip_entry:
+    test ebx, ebx
+    jz .done
+
+    cmp di, 0xF000
+    ja .done
+
+    jmp .next_entry
 
 .done:
-    mov [MEM_MAP_ADDR], bp
+    mov [es:0x0000], bp
+    pop bp
     ret
 
 .error:
     mov si, MSG_ERROR_SRAM
     call print_string
+    pop bp
     hlt
-
