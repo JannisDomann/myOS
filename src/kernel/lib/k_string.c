@@ -1,4 +1,5 @@
 #include "../include/k_string.h"
+#include "../include/memory.h"
 
 #include <stdarg.h>
 
@@ -102,6 +103,14 @@ void k_printf(const char* format, ...) {
 					uint64_t value = va_arg(args, uint64_t);
 					char num[32] = {0};
 					k_hex2str(value, num);
+					k_print_s(num, attrib);
+					break;
+				}
+				case 'p': {
+					uint64_t value = va_arg(args, uint64_t);
+					char num[32] = {'0'};
+					k_memset_u16(num, hex_prefix, 0x01);
+					k_hex2str(value, &num[2]);
 					k_print_s(num, attrib);
 					break;
 				}

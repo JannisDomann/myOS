@@ -3,6 +3,8 @@
 #include "screen.h"
 #include <stdint.h>
 
+#define hex_prefix  0x7830
+
 #ifdef __cplusplus
 extern "C" {
 #endif
