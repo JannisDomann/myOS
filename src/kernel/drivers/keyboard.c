@@ -1,6 +1,6 @@
-#include "../include/keyboard.h"
-#include "../include/io.h"
-#include "../include/k_string.h"
+#include "keyboard.h"
+#include "io.h"
+#include "k_string.h"
 #include <stdbool.h>
 
 // US Keyboard Layout (Scan Code Set 1)

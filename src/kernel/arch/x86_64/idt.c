@@ -1,5 +1,5 @@
 #include "idt.h"
-#include "../include/k_string.h"
+#include "k_string.h"
 
 // The actual table and pointer stored in RAM
 struct idt_entry idt[256];

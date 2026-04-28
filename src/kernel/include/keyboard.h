@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../include/idt.h"
+#include "idt.h"
 
 // Ports
 #define PORT_KEYBD      0x60

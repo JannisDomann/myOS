@@ -1,7 +1,7 @@
-#include "../include/screen.h"
-#include "../include/memory.h"
-#include "../include/io.h"
-#include "../include/lib.h"
+#include "screen.h"
+#include "mem.h"
+#include "io.h"
+#include "lib.h"
 
 void k_clear_screen() {
 	k_memset_u16(VGA_BUFFER, BLANK, (VGA_MAX_ROWS * VGA_MAX_COLS));

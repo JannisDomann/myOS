@@ -1,6 +1,6 @@
-#include "../include/debug.h"
-#include "../include/k_string.h"
-#include "../include/idt.h"
+#include "debug.h"
+#include "k_string.h"
+#include "idt.h"
 
 void kernel_panic(const char* file, int line, const char* msg) {
     cli();

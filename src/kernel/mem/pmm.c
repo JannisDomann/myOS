@@ -1,8 +1,8 @@
-#include "../include/pmm.h"
-#include "../include/memory.h"
-#include "../include/types.h"
+#include "pmm.h"
+#include "mem.h"
+#include "types.h"
 
-#include "../include/debug.h"
+#include "debug.h"
 
 uint8_t* bitmap = (uint8_t*)BITMAP_ADDR;
 

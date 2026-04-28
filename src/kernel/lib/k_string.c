@@ -1,5 +1,5 @@
-#include "../include/k_string.h"
-#include "../include/memory.h"
+#include "k_string.h"
+#include "mem.h"
 
 #include <stdarg.h>
 

@@ -1,4 +1,4 @@
-#include "../include/memory.h"
+#include "mem.h"
 
 void k_memcpy(const void* dest, const void* src, uint64_t count) {
 	uint8_t* d = (uint8_t*)dest;

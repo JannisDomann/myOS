@@ -3,14 +3,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "../include/types.h"
-#include "../include/debug.h"
-#include "../include/screen.h"
-#include "../include/pmm.h"
-#include "../include/idt.h"
-#include "../include/k_string.h"
-#include "../include/keyboard.h"
-#include "../include/ata.h"
+#include "types.h"
+#include "debug.h"
+#include "screen.h"
+#include "pmm.h"
+#include "idt.h"
+#include "k_string.h"
+#include "keyboard.h"
+#include "ata.h"
 
 #ifdef __cplusplus
 extern "C" {
