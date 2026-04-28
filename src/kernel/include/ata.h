@@ -35,5 +35,5 @@
 /* Function prototypes */
 void ata_init();
 void ata_soft_reset();
-void* ata_read_sector(uint64_t lba, uint64_t total_bitmap_blocks);
+void ata_read_sector(uint64_t lba, void* buffer);
 void ata_write_sector(uint64_t lba, void* buffer) ;

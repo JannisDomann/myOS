@@ -26,6 +26,8 @@ void keyboard_init() {
 
     // unmask Keyboard (IRQ1)
     pic_unmask(0x01);
+
+    k_printf("Keyboard driver is active.\n");
 }
 
 void keyboard_handler(interrupt_registers_t* regs) {
