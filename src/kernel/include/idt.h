@@ -53,17 +53,17 @@ typedef struct {
 typedef void (*interrupt_handler_t)(interrupt_registers_t*);
 
 // stub table created in asm
-extern uint64_t isr_stub_table[];
+extern volatile uint64_t isr_stub_table[];
 
 // Assembly helper to load the IDTR
 void idt_set_gate(uint8_t num, uint64_t base, uint16_t sel, uint8_t flags);
 void idt_init();
-extern void load_idt(uint64_t idtp_addr);
+extern volatile void load_idt(uint64_t idtp_addr);
 
 // Common function declarations
-extern void halt();
-extern void cli();
-extern void sti();
+extern volatile void halt();
+extern volatile void cli();
+extern volatile void sti();
 
 // Declaration of the C-Handler
 void isr_handler(interrupt_registers_t* regs);

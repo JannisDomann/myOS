@@ -33,12 +33,12 @@ uint32_t find_partition_start();
 uint32_t find_kernel_cluster(uint32_t partition_lba);
 void load_kernel_file(uint32_t partition_lba, uint32_t start_cluster, uint32_t dest);
 
-extern void load_paging_and_jump(uint32_t pml4, uint32_t efer_msr, uint32_t kernel_entry);
+extern volatile void load_paging_and_jump(uint32_t pml4, uint32_t efer_msr, uint32_t kernel_entry);
 
-extern void outb_asm(uint16_t port, uint8_t val);
-extern uint8_t inb_asm(uint16_t port);
-extern void outw_asm(uint16_t port, uint16_t val);
-extern uint16_t inw_asm(uint16_t port);
+extern volatile void outb_asm(uint16_t port, uint8_t val);
+extern volatile uint8_t inb_asm(uint16_t port);
+extern volatile void outw_asm(uint16_t port, uint16_t val);
+extern volatile uint16_t inw_asm(uint16_t port);
 
 #ifdef __cplusplus
 }
