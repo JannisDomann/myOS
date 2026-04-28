@@ -84,8 +84,6 @@ cc_library(
     name = "stage2_hdrs",
     hdrs = [
         "stage2/stage2.h",
-        "stage2/MBR.h",
-        "stage2/FAT32.h",
         "stage2/ATA_driver.h",
     ],
 )
@@ -98,6 +96,7 @@ cc_binary(
     deps = [
         ":stage2_startup",
         ":stage2_hdrs",
+        "//src/kernel/include:FAT32",
     ],
     features = [
         "-default_link_libs",
