@@ -35,6 +35,7 @@ cc_library(
     srcs = glob([
         "core/*.c",
         "drivers/*.c",
+        "fs/*.c",
         "lib/*.c",
         "mem/*.c",
         "arch/x86_64/*.c",

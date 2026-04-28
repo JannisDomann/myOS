@@ -11,6 +11,7 @@
 #include "k_string.h"
 #include "keyboard.h"
 #include "ata.h"
+#include "FAT32.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -6,3 +6,13 @@ cc_library(
     hdrs = glob(["*.h"]),
     includes = ["."],
 )
+
+cc_library(
+    name = "FAT32",
+    hdrs = [
+        "FAT32.h",
+        "MBR.h",
+    ],
+    includes = ["."],
+    visibility = ["//visibility:public"],
+)
