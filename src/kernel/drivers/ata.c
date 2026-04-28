@@ -1,8 +1,8 @@
-#include "../include/ata.h"
-#include "../include/pmm.h"
-#include "../include/idt.h"
-#include "../include/io.h"
-#include "../include/types.h"
+#include "ata.h"
+#include "pmm.h"
+#include "idt.h"
+#include "io.h"
+#include "types.h"
 #include <stdbool.h>
 
 /* Global flag for IRQ synchronization */
@@ -63,4 +63,36 @@ void* ata_read_sector(uint64_t lba, uint64_t total_bitmap_blocks) {
     k_insw(ATA_DATA_PORT, buffer, 0x100);
 
     return buffer;
+}
+
+void ata_write_sector(uint64_t lba, void* buffer) {
+    uint16_t* data = (uint16_t*)buffer;
+
+    ata_irq_fired = false;
+
+    /* 1. Select drive and highest 4 bits of LBA */
+    while (k_inb(ATA_COMMAND_STAT_PORT) & (ATA_STATUS_BSY | ATA_STATUS_DRQ));
+    k_outb(ATA_DRIVE_SELECT_PORT, ATA_DRIVE_MASTER | ((lba >> 0x18) & 0x0F));
+    k_io_wait();
+
+    /* 2. Send sector count and rest of LBA */
+    k_outb(ATA_SECTOR_COUNT_PORT, 0x01);
+    k_outb(ATA_LBA_LOW_PORT, (uint8_t)lba);
+    k_outb(ATA_LBA_MID_PORT, (uint8_t)(lba >> 0x08));
+    k_outb(ATA_LBA_HIGH_PORT, (uint8_t)(lba >> 0x10));
+
+    /* 3. Issue the WRITE command */
+    k_outb(ATA_COMMAND_STAT_PORT, ATA_CMD_WRITE_PIO);
+    while (!(k_inb(ATA_COMMAND_STAT_PORT) & ATA_STATUS_DRQ));
+
+    /* 4. Transfer 256 words (512 bytes) from buffer to data port */
+    uint8_t status;
+    do {
+        status = k_inb(ATA_CONTROL_PORT);
+    }
+    while ((status & ATA_STATUS_BSY) || (!(status & ATA_STATUS_DRQ)));
+    k_outsw(ATA_DATA_PORT, data, 0x100);
+
+    /* 5. Wait for the interrupt to signal data is written */
+    while (!ata_irq_fired);
 }

@@ -15,6 +15,7 @@
 
 /* ATA Commands */
 #define ATA_CMD_READ_PIO        0x20
+#define ATA_CMD_WRITE_PIO       0x30
 #define ATA_CMD_IDENTIFY        0xEC
 
 /* Drive Select Bits */
@@ -35,3 +36,4 @@
 void ata_init();
 void ata_soft_reset();
 void* ata_read_sector(uint64_t lba, uint64_t total_bitmap_blocks);
+void ata_write_sector(uint64_t lba, void* buffer) ;

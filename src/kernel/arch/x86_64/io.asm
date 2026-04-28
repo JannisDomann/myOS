@@ -1,6 +1,6 @@
 [BITS 64]
 
-global k_outb, k_inb, k_insw, k_io_wait
+global k_outb, k_inb, k_insw, k_outsw, k_io_wait
 
 ; --- ports ---
 PORT_SELFTEST   equ 0x80
@@ -22,6 +22,13 @@ k_insw:
     mov rdx, rdi
     mov rdi, rsi
     rep insw
+    ret
+
+k_outsw:
+    cld
+    mov rcx, rdx
+    mov rdx, rdi
+    rep outsw
     ret
 
 k_io_wait:
