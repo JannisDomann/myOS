@@ -13,9 +13,10 @@ typedef struct {
     uint32_t acpi;                  // ACPI reserviert
 } __attribute__((packed)) e820_entry_t;
 
-uint64_t pmm_init();
+void pmm_init();
 void pmm_free_frame(uint64_t address);
 void pmm_lock_frame(uint64_t address);
 void pmm_free_range(uint64_t base, uint64_t length);
 void pmm_lock_range(uint64_t base, uint64_t length);
-void* pmm_alloc_frame(uint64_t total_blocks);
+void* pmm_alloc_frame();
+void* pmm_alloc_frames(uint64_t count);
