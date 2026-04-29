@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* I/O Ports for Primary Bus */
 #define ATA_DATA_PORT           0x1F0
 #define ATA_FEATURES_PORT       0x1F1
@@ -37,3 +41,7 @@ void ata_init();
 void ata_soft_reset();
 void ata_read_sector(uint64_t lba, void* buffer);
 void ata_write_sector(uint64_t lba, void* buffer) ;
+
+#ifdef __cplusplus
+}
+#endif

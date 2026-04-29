@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint8_t  jmp[3];
     char     oem[8];
@@ -55,3 +59,7 @@ uint32_t find_partition_start();
 uint32_t fat32_get_next_cluster(uint32_t current_cluster);
 uint32_t fat32_find_file(const char* name, uint32_t* file_size_bytes);
 void fat32_read_file(uint32_t start_cluster, void* buffer);
+
+#ifdef __cplusplus
+}
+#endif

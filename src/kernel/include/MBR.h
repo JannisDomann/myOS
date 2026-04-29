@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint8_t  boot_drive;
     uint8_t  start_head;
@@ -14,3 +18,7 @@ typedef struct {
     uint32_t lba_start;      // <--- DAS brauchen wir (wird 2048 sein)
     uint32_t lba_length;
 } __attribute__((packed)) mbr_partition_t;
+
+#ifdef __cplusplus
+}
+#endif

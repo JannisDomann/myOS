@@ -2,6 +2,10 @@
 
 #include "idt.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Ports
 #define PORT_KEYBD      0x60
 
@@ -12,10 +16,6 @@
 
 // Interrupt
 #define INT_KEYBD       0x21  
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 void keyboard_init();
 void keyboard_handler(interrupt_registers_t* regs);

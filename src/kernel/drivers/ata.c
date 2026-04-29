@@ -3,6 +3,7 @@
 #include "idt.h"
 #include "io.h"
 #include "types.h"
+#include "k_string.h"
 #include <stdbool.h>
 
 /* Global flag for IRQ synchronization */

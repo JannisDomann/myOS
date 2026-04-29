@@ -1,11 +1,13 @@
 #include "pmm.h"
 #include "mem.h"
+#include "k_string.h"
 #include "types.h"
 
 #include "debug.h"
 
 static uint8_t* bitmap = (uint8_t*)BITMAP_ADDR;
 static uint64_t total_bitmap_blocks;
+uint64_t total_mem_bytes;
 
 void pmm_init() {
     uint16_t entry_count = *(uint16_t*)MEM_MAP_ADDR;
@@ -41,7 +43,10 @@ void pmm_init() {
     // lock further 4MB for kernel
     pmm_lock_range(0x100000, 0x500000);
 
-    k_printf("Physical memory management is active with %dMB of RAM.\n", total_bitmap_blocks * 0x40 * 0x1000 / (0x400 * 0x400));
+    // calc total mem bytes
+    total_mem_bytes = total_bitmap_blocks * 0x40 * 0x1000;
+
+    k_printf("Physical memory management is active with %dMB of RAM.\n", total_mem_bytes / (0x400 * 0x400));
 }
 
 void pmm_free_frame(uint64_t address) {

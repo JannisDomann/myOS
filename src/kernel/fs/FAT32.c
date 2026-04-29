@@ -2,6 +2,7 @@
 #include "MBR.h"
 #include "ata.h"
 #include "mem.h"
+#include "k_string.h"
 
 static uint32_t partition_lba;
 
