@@ -1,40 +1,23 @@
-Da dein PMM jetzt theoretisch „weiß“, wo der Speicher ist, müssen wir ihn praktisch nutzbar machen. Ein Buchhaltungssystem bringt nichts, wenn man kein Geld abheben kann.
-Hier ist der Plan für die nächsten drei Schritte:
-1. Die „Abhebefunktion“: pmm_alloc_frame
-Du brauchst eine Funktion, die die Bitmap durchsucht, das erste freie Bit (0) findet, es auf 1 setzt und dir die physische Adresse zurückgibt.
-Effizienz-Tipp: Suche nicht Bit für Bit. Prüfe immer 64 Bit (einen uint64_t) gleichzeitig. Wenn der Wert 0xFFFFFFFFFFFFFFFF ist, weißt du sofort: „Hier ist alles voll, weiter zum nächsten Block.“
-c
+Checkliste: Der Weg zum dynamischen VMM
+1. Vorbereitung (Datentypen & Helfer)
 
-void* pmm_alloc_frame() {
-    uint64_t* bitmap64 = (uint64_t*)bitmap;
-    for (uint64_t i = 0; i < BITMAP_SIZE_64; i++) {
-        if (bitmap64[i] != 0xFFFFFFFFFFFFFFFF) { // Ist hier mindestens ein Bit 0?
-            for (int j = 0; j < 64; j++) {
-                if (!(bitmap64[i] & (1ULL << j))) {
-                    uint64_t addr = (i * 64 + j) * PAGE_SIZE;
-                    pmm_lock_frame(addr);
-                    return (void*)addr;
-                }
-            }
-        }
-    }
-    return NULL; // Out of Memory
-}
+    vmm_map_at: Eine Version von vmm_map erstellen, die eine beliebige PML4 als Argument nimmt (statt cr3 zu lesen). Das brauchen wir, um die neue Tabelle aufzubauen, während die alte noch aktiv ist.
+    Defines finalisieren: PAGE_FRAME_MASK, PHYS_OFFSET und die Index-Makros in vmm.h festlegen.
 
-Verwende Code mit Vorsicht.
-2. Den Kernel in die „Upper Half“ schieben (Virtual Memory)
-Aktuell ist dein Kernel „Identity Mapped“ (Virtuelle Adresse = Physische Adresse). Moderne Kernel liegen aber virtuell bei 0xFFFFFFFF80000000.
+2. Das Bootstrap-Mapping (Der "Switch")
 
-    Warum jetzt? Weil du dann Anwenderprogrammen den unteren Speicherbereich (0x0...) geben kannst.
-    Wie? Du musst einen weiteren Eintrag in deiner pml4-Tabelle (Index 511) erstellen, der auf dieselbe pdpt zeigt wie dein erster Eintrag.
+    vmm_create_kernel_context: Eine Funktion, die:
+        Eine neue PML4-Seite vom PMM anfordert.
+        Die ersten 1GB (oder den Kernel-Bereich) identisch mappt (damit der Code beim Umschalten nicht abstürzt).
+        Den physischen RAM ab PHYS_OFFSET mappt.
+    CR3-Update: Die neue PML4-Adresse in CR3 schreiben. Ab diesem Moment ist dein neuer VMM der "Chef".
 
-3. Der ATA-Treiber (Endlich Daten lesen!)
-Sobald pmm_alloc_frame funktioniert, kannst du den ATA-Treiber so umbauen, dass er nicht mehr in einen festen Puffer schreibt, sondern:
+3. Cleanup & Higher Half Migration
 
-    Sich einen freien Frame vom PMM holt.
-    Die Sektoren dorthin liest.
-    Den Frame nach der Arbeit wieder freigibt.
+    Identity Mapping entfernen: Sobald der Kernel stabil in der Higher Half läuft, löschen wir die unteren Mappings (0x0 bis ...), damit der User-Space dort später Platz hat.
+    Page Fault Handler: Eine Funktion in den IDT (Interrupt Descriptor Table) einhängen, die uns sagt, wenn etwas schiefgeht (#PF - Exception 14). Ohne das stochern wir im Dunkeln, falls ein Mapping fehlt.
 
-Mein Vorschlag:
-Lass uns zuerst pmm_alloc_frame fertigstellen und kurz testen (indem du zwei Frames reservierst und prüfst, ob sie unterschiedliche Adressen haben).
-Danach: Wollen wir das Paging auf „Upper Half“ umstellen oder direkt den ATA-Treiber mit IRQs (Interrupts) zum Laufen bringen?**
+4. Features (Dynamik)
+
+    vmm_unmap: Seiten wieder freigeben.
+    Kernel-Heap: Eine Funktion kmalloc, die den VMM nutzt, um dem Kernel dynamisch Speicher zu geben.

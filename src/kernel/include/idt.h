@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // PICs
 #define PIC1_COMMAND    0x20
 #define PIC1_DATA       0x21
@@ -21,8 +25,36 @@
 #define PIC_EOI         0x20    // End of Interrupt command
 
 #define INT_GATE        0x8E    // Define type of interrupt gate
-#define K_CODE_SEG_SEL  0x18    // Kernel Code Segment Selector
+#define K_CODE_SEG_SEL  0x08    // Kernel Code Segment Selector
 
+/* CPU Exceptions (0-31) */
+#define EXCEPTION_DE    0x00   /* Divide-by-zero Error */
+#define EXCEPTION_DB    0x01   /* Debug */
+#define EXCEPTION_NMI   0x02   /* Non-maskable Interrupt */
+#define EXCEPTION_BP    0x03   /* Breakpoint */
+#define EXCEPTION_OF    0x04   /* Overflow */
+#define EXCEPTION_BR    0x05   /* Bound Range Exceeded */
+#define EXCEPTION_UD    0x06   /* Invalid Opcode */
+#define EXCEPTION_NM    0x07   /* Device Not Available */
+#define EXCEPTION_DF    0x08   /* Double Fault */
+#define EXCEPTION_CSO   0x09   /* Coprocessor Segment Overrun (Legacy) */
+#define EXCEPTION_TS    0x0A   /* Invalid TSS */
+#define EXCEPTION_NP    0x0B   /* Segment Not Present */
+#define EXCEPTION_SS    0x0C   /* Stack-Segment Fault */
+#define EXCEPTION_GP    0x0D   /* General Protection Fault */
+#define EXCEPTION_PF    0x0E   /* Page Fault */
+/* 0x0F is Reserved by Intel */
+#define EXCEPTION_MF    0x10   /* x87 Floating-Point Exception */
+#define EXCEPTION_AC    0x11   /* Alignment Check */
+#define EXCEPTION_MC    0x12   /* Machine Check */
+#define EXCEPTION_XM    0x13   /* SIMD Floating-Point Exception */
+#define EXCEPTION_VE    0x14   /* Virtualization Exception */
+#define EXCEPTION_CP    0x15   /* Control Protection Exception */
+/* 0x16 - 0x1B are Reserved */
+#define EXCEPTION_HV    0x1C   /* Hypervisor Injection Exception */
+#define EXCEPTION_VC    0x1D   /* VMM Communication Exception */
+#define EXCEPTION_SX    0x1E   /* Security Exception */
+/* 0x1F is Reserved */
 
 // IDT entry structure (16 bytes in 64-bit mode)
 struct idt_entry {
@@ -74,3 +106,7 @@ void pic_unmask(uint8_t irq) ;
 
 // rergister int handler
 void register_interrupt_handler(uint8_t n, interrupt_handler_t handler);
+
+#ifdef __cplusplus
+}
+#endif
