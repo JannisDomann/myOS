@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vmm.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -17,7 +18,7 @@ extern "C" {
 // Screen Dimensions
 #define VGA_MAX_COLS            80
 #define VGA_MAX_ROWS            25
-#define VGA_BUFFER              (uint16_t*)0xB8000
+#define VGA_BUFFER              (0xB8000 + PHYS_OFFSET) // Using your PHYS_OFFSET
 
 // Standard Attributes
 #define STD_FOREGROUND          0x0F

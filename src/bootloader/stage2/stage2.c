@@ -36,8 +36,14 @@ void setup_paging() {
     memset(pdpt, 0, 4096);
     memset(pd, 0, 4096);
 
-    // map first pml4 entry to pdpt
+    // 1. Identity Mapping (Lower Half)
     pml4[0] = (uint32_t)pdpt | PAGE_PRESENT | PAGE_WRITE;
+
+    /*  2. Direct Mapping (Higher Half)
+        We map the SAME PDPT to the higher half entry as well.
+        0xFFFF800000000000 corresponds to PML4 Index 256
+    */
+    pml4[256] = (uint32_t)pdpt | PAGE_PRESENT | PAGE_WRITE;
 
     // map first pdpt entry to pd
     pdpt[0] = (uint32_t)pd   | PAGE_PRESENT | PAGE_WRITE;

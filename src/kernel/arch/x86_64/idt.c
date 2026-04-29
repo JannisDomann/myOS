@@ -1,4 +1,5 @@
 #include "idt.h"
+#include "io.h"
 #include "k_string.h"
 
 // The actual table and pointer stored in RAM
@@ -72,19 +73,29 @@ void idt_init() {
 }
 
 void isr_handler(interrupt_registers_t* regs) {
-    if (interrupt_handlers[regs->int_no] != 0) {
+    if (interrupt_handlers[regs->int_no] != 0x00) {
         interrupt_handlers[regs->int_no](regs);
     }
-    else if (regs->int_no < 32) {
+    else if (regs->int_no < 0X20) {
         // [EXCEPTION HANDLING]
         k_printf("\n" CLR_ERROR "[CPU EXCEPTION]" CLR_RESET " %s (Vector %d)", exception_messages[regs->int_no], regs->int_no);
+        
+        switch (regs->int_no) {
+            case EXCEPTION_PF: {
+                // Special case for Page Fault: read CR2
+                k_printf(" | Faulting Address: %p", k_read_cr2());
+                break;
+            }
+            default: {}
+        }
+                
         k_printf("\tRIP: 0x%x | Error Code: %d\n", regs->rip, regs->err_code);
         
         // Halt the system
         halt();
     }
     
-    if (regs->int_no >= 32 && regs->int_no < 48) {
+    if (regs->int_no >= 0x20 && regs->int_no < 0x30) {
         // Hardware Interrupts (IRQs) always need an EOI
         // Send EOI to PIC
         if (regs->int_no >= 40) {
