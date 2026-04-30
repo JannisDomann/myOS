@@ -47,6 +47,18 @@ genrule(
 )
 
 
+genrule(
+    name = "generate_memory_layout_inc",
+    srcs = ["//src/include/shared:memory_layout.h"],
+    outs = ["memory_layout.inc"],
+    cmd = """
+        echo '#include "src/include/shared/memory_layout.h"' > gen.c
+        echo '#include <stdio.h>' >> gen.c
+        echo 'int main() { printf("%%define MEM_MAP_ADDR 0x%lx\\n", (unsigned long)MEM_MAP_ADDR); return 0; }' >> gen.c
+        gcc gen.c -I. -o gen_exec || exit 1
+        ./gen_exec > $@
+    """,
+)
 
 nasm_object(
     name = "stage2_startup_obj",
@@ -55,6 +67,7 @@ nasm_object(
         "stage2/a20_check.inc",
         "stage2/a20_kbc.inc",
         "stage2/gdt.inc",
+        ":generate_memory_layout_inc",
     ],
     out = "stage2_startup.o",
 )
@@ -97,6 +110,7 @@ cc_binary(
         ":stage2_startup",
         ":stage2_hdrs",
         "//src/kernel/include:FAT32",
+        "//src/include/shared:memory_layout",
     ],
     features = [
         "-default_link_libs",

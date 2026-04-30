@@ -43,6 +43,8 @@ cc_library(
     deps = [
         ":kernel_startup",
         "//src/kernel/include:headers",
+        "//src/include/shared:memory_layout",
+
     ],
     copts = [
         "-m64",
@@ -52,6 +54,16 @@ cc_library(
     ],
 )
 
+genrule(
+    name = "processed_kernel_ld",
+    srcs = [
+        "//src/linker:kernel.ld.S",
+        "//src/include/shared:memory_layout.h",
+    ],
+    outs = ["kernel.ld"],
+    cmd = "gcc -E -x c -P $(location //src/linker:kernel.ld.S) -I$$(dirname $(location //src/include/shared:memory_layout.h)) -o $@",
+)
+
 cc_binary(
     name = "kernel.elf",
     srcs = [
@@ -59,6 +71,7 @@ cc_binary(
     ],
     deps = [
         ":kernel_lib",
+        "//src/include/shared:memory_layout",
     ],
     features = [
         "-default_link_libs",
@@ -78,20 +91,12 @@ cc_binary(
     ],
     linkopts = [
         "-m64",
-        "-T", "$(location //src/linker:kernel.ld)",
+        "-T", "$(location :processed_kernel_ld)",
         "-nostdlib",
         "-static",
         "-no-pie",
         "-Wl,--build-id=none",
     ],
-    additional_linker_inputs = ["//src/linker:kernel.ld"],
-    visibility = ["//visibility:public"],
-)
-
-genrule(
-    name = "kernel_bin",
-    srcs = [":kernel.elf"],
-    outs = ["kernel.bin"],
-    cmd = "objcopy -O binary $(SRCS) $@",
+    additional_linker_inputs = [":processed_kernel_ld"],
     visibility = ["//visibility:public"],
 )

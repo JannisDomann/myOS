@@ -137,7 +137,7 @@ void* k_malloc(uint64_t size) {
 
 	// After expanding, the new memory is at the HEAD of the list.
     // We try again. This time it MUST succeed (unless PMM is out of memory).
-	k_malloc(size); //retry
+	return k_malloc(size); //retry
 }
 
 void k_free(void* ptr) {

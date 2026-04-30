@@ -1,7 +1,6 @@
 [BITS 32]
 
-global outb_asm, outw_asm, inb_asm, inw_asm
-
+global outb_asm
 outb_asm:
     push ebp
     mov ebp, esp
@@ -17,6 +16,7 @@ outb_asm:
     pop ebp
     ret
 
+global outw_asm
 outw_asm:
     push ebp
     mov ebp, esp
@@ -32,6 +32,7 @@ outw_asm:
     pop ebp
     ret
 
+global inb_asm
 inb_asm:
     push ebp
     mov ebp, esp
@@ -45,6 +46,7 @@ inb_asm:
     pop ebp
     ret
 
+global inw_asm
 inw_asm:
     push ebp
     mov ebp, esp
@@ -57,4 +59,9 @@ inw_asm:
     pop edx
     pop ebp
     ret
+    
+global halt
+halt:
+    hlt
+    jmp halt
     

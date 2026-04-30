@@ -3,10 +3,14 @@ genrule(
     srcs = [
         "//src/bootloader:stage1_bin",
         "//src/bootloader:stage2_bin",
-        "//src/kernel:kernel_bin",
+        "//src/kernel:kernel.elf",
+        "//src/include/shared:memory_layout.h",
     ],
     outs = ["disk.img"],
     cmd = """
+        # gather kernel filename
+        K_NAME=$$(grep "KERNEL_FILE_NAME" $(location //src/include/shared:memory_layout.h) | cut -d '"' -f 2 | tr -s ' ' '.')
+
         # empty 32MB image
         dd if=/dev/zero of=$@ bs=1M count=32
 
@@ -21,7 +25,7 @@ genrule(
         /usr/sbin/mkfs.vfat -F 32 --offset 2048 $@ 60000
 
         # copy kernel to partition
-        MTOOLS_SKIP_CHECK=1 mcopy -i $@@@1048576 $(location //src/kernel:kernel_bin) ::/kernel.sys
+        MTOOLS_SKIP_CHECK=1 mcopy -i $@@@1048576 $(location //src/kernel:kernel.elf) ::/$$K_NAME
         """,
 )
         

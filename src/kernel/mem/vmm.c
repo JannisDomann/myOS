@@ -1,3 +1,4 @@
+#include "memory_layout.h"
 #include "vmm.h"
 #include "pmm.h"
 #include "mem.h"
@@ -8,7 +9,7 @@ static pt_entry* get_next_table(pt_entry* parent_table, uint64_t index, bool all
     if (parent_table[index] & PTE_PRESENT) {
         // Extract physical address (masking flags) and convert to virtual
         uint64_t phys = parent_table[index] & PAGE_FRAME_MASK;
-        return (pt_entry*)(phys + PHYS_OFFSET);
+        return (pt_entry*)(phys + PHYS_MAP_OFFSET);
     }
 
     if (!allocate) {
@@ -22,7 +23,7 @@ static pt_entry* get_next_table(pt_entry* parent_table, uint64_t index, bool all
     }
 
     // Zero out the new table (crucial!)
-    pt_entry* new_table_virt = (pt_entry*)(new_table_phys + PHYS_OFFSET);
+    pt_entry* new_table_virt = (pt_entry*)(new_table_phys + PHYS_MAP_OFFSET);
     k_memset_u64(new_table_virt, 0x00, PAGE_SIZE / 0x08);
 
     // Link new table into parent with standard flags (usually Present | Writable | User)
@@ -36,45 +37,40 @@ void vmm_init() {
     // 1. Allocate a frame for the new kernel PML4
     pt_entry new_pml4_phys = (pt_entry)pmm_alloc_frame();
     
-    // 2. Access the new PML4 via PHYS_OFFSET
-    // This works because Stage 2 already mapped PHYS_OFFSET to the first 1GB
-    pt_entry* new_pml4_virt = (pt_entry*)(new_pml4_phys + PHYS_OFFSET);
+    // 2. Access the new PML4 via PHYS_MAP_OFFSET
+    // This works because Stage 2 already mapped PHYS_MAP_OFFSET to the first 1GB
+    pt_entry* new_pml4_virt = (pt_entry*)(new_pml4_phys + PHYS_MAP_OFFSET);
     k_memset_u64(new_pml4_virt, 0x00, PAGE_SIZE / 0x08);
 
-    // 3. Setup Identity Mapping for the Kernel (Transition phase)
-    // Map the first 16MB (or more) to stay alive during CR3 switch
-    for (uint64_t addr = 0; addr < 0x1000000; addr += PAGE_SIZE) {
-        vmm_map(addr, addr, new_pml4_virt, PTE_PRESENT | PTE_WRITABLE);
-    }
-
-    // 4. Setup Physical Memory Direct Mapping (Higher Half)
-    // Calculate the number of pages needed to cover all bytes
+    /* 3. Setup Physical Memory Direct Mapping (Higher Half)
+        Map the entire available RAM starting at PHYS_MAP_OFFSET */
     uint64_t total_pages = (total_mem_bytes + PAGE_SIZE - 1) / PAGE_SIZE;
-    // Map the entire available RAM starting at PHYS_OFFSET
     for (uint64_t i=0; i<total_pages; i++) {
         uint64_t addr = i * PAGE_SIZE;
-        vmm_map(addr + PHYS_OFFSET, addr, new_pml4_virt, PTE_PRESENT | PTE_WRITABLE);
+        vmm_map(addr + PHYS_MAP_OFFSET, addr, new_pml4_virt, PTE_PRESENT | PTE_WRITABLE);
     }
 
-    // 5. Setup Kernel Higher Half Mapping (Optional but recommended)
-    // If your kernel is linked to 0xFFFFFFFF80000000, map it here.
-    // For now, we rely on the Direct Mapping access.
+    // 5. Inherit mappings from Bootloader
+    uint64_t* old_pml4_virt = (uint64_t*)(k_read_cr3() + PHYS_MAP_OFFSET);
+    new_pml4_virt[256] = old_pml4_virt[256]; // Direct Map
+    new_pml4_virt[511] = old_pml4_virt[511]; // Kernel
 
-    // 6. Switch to the new PML4
-    k_write_cr3(new_pml4_phys);
+    /* 6. Temporarily keep identity mapping for the switch 
+       to prevent immediate crash if some structures are still accessed physically */
+    new_pml4_virt[0] = old_pml4_virt[0];
 
-    // 7. Cleanup: From here on, we could unmap the Identity Mapping (0x0...)
-    // to catch NULL pointer dereferences in kernel space.
-    // unmap bootloader section in first 1MB
-    for (uint64_t addr=0x00; addr<0x100000; addr+=PAGE_SIZE) {
-        vmm_unmap(addr, NULL);
-    }
+    /* 7. Switch to the new PML4
+       Transition to the new memory space. Identity mapping disappears NOW. */
+    k_write_cr3((uint64_t)new_pml4_phys);
 
-    // 8. NOW: Unmap the NULL page to activate the safety net
-    // We pass NULL as the second argument so vmm_unmap uses the current CR3
-    vmm_unmap(0x00, NULL);
+    /* 7. Cleanup: NOW remove the Identity Mapping for good
+       NULL-pointer protection and isolation start here */
+    new_pml4_virt[0] = 0x00;
+    
+    // Flush TLB to propagate the unmapping of the lower half
+    k_write_cr3((uint64_t)new_pml4_phys);
 
-    k_printf("VMM initialized. NULL-pointer protection active.\n");
+    k_printf("VMM initialized. NULL-ptr protection active. Higher Half isolation complete.\n");
 }
 
 bool vmm_map(uint64_t virt, uint64_t phys, pt_entry* pml4, uint64_t flags) {
@@ -82,7 +78,7 @@ bool vmm_map(uint64_t virt, uint64_t phys, pt_entry* pml4, uint64_t flags) {
     if (!pml4) {
         uint64_t cr3 = k_read_cr3();
         // Convert the CR3 physical address to virtual via our offset
-        pml4 = (pt_entry*)((cr3 & PAGE_FRAME_MASK) + PHYS_OFFSET);
+        pml4 = (pt_entry*)((cr3 & PAGE_FRAME_MASK) + PHYS_MAP_OFFSET);
     }
 
     // Traverse the hierarchy
@@ -120,7 +116,7 @@ bool vmm_unmap(uint64_t virt, pt_entry* pml4) {
     // If no PML4 provided, use the current one from CR3
     if (!pml4) {
         uint64_t cr3 = k_read_cr3();
-        pml4 = (pt_entry*)((cr3 & PAGE_FRAME_MASK) + PHYS_OFFSET);
+        pml4 = (pt_entry*)((cr3 & PAGE_FRAME_MASK) + PHYS_MAP_OFFSET);
     }
 
     // Traverse the hierarchy, but DO NOT allocate new tables
@@ -167,7 +163,7 @@ void* vmm_allocate_kernel_pages(uint64_t count, uint64_t start_vaddr) {
             // ERROR: We must free the physical frames we allocated
             // Note: We use phys_base (physical), not start_vaddr (virtual)!
             // Assuming your PMM has a function like pmm_free_range(phys, count)
-            pmm_free_range(phys_base, count * PAGE_SIZE);
+            pmm_free_range((uint64_t)phys_base, count * PAGE_SIZE);
             
             // Optional: Unmap the pages that WERE successful before the error
             // to keep the VMM clean

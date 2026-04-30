@@ -11,7 +11,7 @@ The boot process is handled by a custom two-stage bootloader before jumping into
 
 **Stage 1 (MBR):**
 *   **Sector 0:** Fits within 512 bytes.
-*   **Stage 2 Loction** Locates and loads Stage 2 from Sector 2.
+*   **Stage 2 Loction:** Locates and loads Stage 2 from Sector 2.
 *   **Transition:** Passes execution to the 16-bit real mode entry point of Stage 2.
 
 **Stage 2:**
@@ -52,7 +52,7 @@ The heart of myOS, running in the **Higher Half** of the virtual address space.
 * **VS Code** (Recommended for the integrated debugging experience)
 
 ### ⚡ Integrated Workflow (VS Code Tasks)
-The project includes a `tasks.json` to automate the build and emulation cycle. You can trigger these via `Ctrl+Shift+B`:
+The project includes a `tasks.json` to automate the build and emulation cycle. You can trigger these via `Ctrl+Shift+P`:
 
 *   **Build myOS**: Compiles the disk image in debug mode.
     ```bash
@@ -95,3 +95,4 @@ bazel clean --expunge
 
 ---
 ***Developed with passion for low-level systems.*** ❤️ 
+

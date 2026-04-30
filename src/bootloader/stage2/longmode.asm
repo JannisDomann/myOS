@@ -11,7 +11,6 @@ load_paging_and_jump:
     ; safe base pointer and kernel_entry
     push ebp
     mov ebp, esp
-    mov ebx, [ebp + 16]
 
     ; Address of PML4
     mov eax, [ebp + 8]
@@ -32,8 +31,6 @@ load_paging_and_jump:
     mov eax, cr0
     or eax, CR0_PG
     mov cr0, eax
-
-    pop ebp
     
     ; 4. jump (far jump) to 64 bit long mode 
     jmp 0x18:long_mode_64
@@ -48,8 +45,8 @@ long_mode_64:
     mov gs, ax
     mov ss, ax
 
-    ; call kernel_main @ [bp + 16]
-    mov rax, rbx
+    ; call kernel_main @ [rbp + 16]
+    mov rax, [rbp + 16]
     jmp rax
 
     hlt

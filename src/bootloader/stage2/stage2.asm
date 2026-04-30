@@ -5,7 +5,6 @@ global stage2_start
 extern stage2_main
 
 ; --- constants ---
-MEM_MAP_ADDR    equ 0x1000      ; RAM Map Addr where Kernel can load from
 SMAP            equ 0x534D4150  ; SMAP - signature
 BSIZE           equ 0x18        ; SMAP buffer size
 CR              equ 0x0D        ; Carriage Return
@@ -25,6 +24,7 @@ stage2_start:
 %include "a20_check.inc"
 %include "a20_kbc.inc"
 %include "gdt.inc"
+%include "memory_layout.inc"
 
 init:
     ; init segments and stack
@@ -154,7 +154,7 @@ print_string:
 detect_memory:
     push bp
 
-    mov ax, MEM_MAP_ADDR
+    mov ax, (MEM_MAP_ADDR>>0x04)
     mov es, ax
     mov di, 0x0004
 

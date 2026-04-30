@@ -16,7 +16,6 @@ extern "C" {
 #endif
 
 #define PAGE_SIZE       0x1000
-#define PHYS_OFFSET     0xFFFF800000000000 // Higher Half Address Space
 #define PAGE_FRAME_MASK ~0xFFFULL
 
 // Page Table Entry Flags

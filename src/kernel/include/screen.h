@@ -1,5 +1,6 @@
 #pragma once
 
+#include "memory_layout.h"
 #include "vmm.h"
 #include <stdint.h>
 
@@ -18,7 +19,7 @@ extern "C" {
 // Screen Dimensions
 #define VGA_MAX_COLS            80
 #define VGA_MAX_ROWS            25
-#define VGA_BUFFER              (0xB8000 + PHYS_OFFSET) // Using your PHYS_OFFSET
+#define VGA_BUFFER              ((uint16_t*)VGA_BUFFER_ADDR)
 
 // Standard Attributes
 #define STD_FOREGROUND          0x0F
@@ -30,7 +31,7 @@ extern "C" {
 #define TAB                     "    "
 
 /*
-Wert	Farbe (Dunkel)	        Wert	Farbe (Hell)
+Wert	Color (Dark)	        Wert	Color (Light)
 0x00	Black (Schwarz)	        0x08	Dark Grey (Dunkelgrau)
 0x01	Blue (Blau)	            0x09	Light Blue (Hellblau)
 0x02	Green (Grün)	        0x0A	Light Green (Hellgrün)

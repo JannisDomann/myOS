@@ -3,7 +3,7 @@
 #include "k_string.h"
 
 // These will live in your Kernel Data Segment
-static gdt_entry gdt[3] __attribute__((aligned(16)));
+static gdt_entry gdt[3];
 static gdt_ptr gp;
 
 static void gdt_set_gate(int num, uint64_t base, uint32_t limit, uint8_t access, uint8_t gran) {
